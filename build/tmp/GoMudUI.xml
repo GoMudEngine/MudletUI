@@ -1,0 +1,3494 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE MudletPackage>
+<MudletPackage version="1.001">
+  <ScriptPackage>
+    <ScriptGroup isActive="yes" isFolder="yes">
+        
+      <name>GoMudUI</name>
+      <script>ui = ui or {}</script>
+        
+      <packageName/>
+      
+      <eventHandlerList>
+</eventHandlerList>
+      <ScriptGroup isActive="yes" isFolder="yes">
+          
+        <name>UI Containers</name>
+        <script/>
+          
+        <packageName/>
+        
+        <eventHandlerList>
+</eventHandlerList>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Create Containers</name>
+          <script>function ui.createContainers(arg)
+  -- Do some caltulations on font sizes to make sure everything fits into the console we create
+  -- By calculating the pixel width of the font, we are able to make sure we size the consoles and windows correctly
+  ui.consoleFontWidth, ui.consoleFontHeight = calcFontSize(ui.settings.consoleFontSize, ui.settings.consoleFont)
+  
+  -- If someone sets a different font/fontsize in the main window, lets make sure we have that defined as well
+  ui.mainFontWidth, ui.mainFontHeight = calcFontSize(getFontSize("main"), getFont(main))
+  
+  -- Lets calculate the gauge font sizes as well
+  ui.gaugeFontWidth, ui.gaugeFontHeight = calcFontSize(ui.settings.gaugeFontSize, ui.settings.consoleFont)
+  
+  -- Lets calculate the prompt font sizes as well
+  ui.promptFontWidth, ui.promptFontHeight = calcFontSize(ui.settings.promptFontSize, ui.settings.consoleFont)
+  
+  -------------[ If a full reset is required ]-------------
+  local arg = arg
+  local containerAutoload = true
+  
+  if arg == "reset" then
+    for k,v in pairs(ui.settings.containers) do
+      if ui[k] then
+        ui[k]:deleteSaveFile()
+        ui[k] = nil
+      end
+      ui.top = nil
+      ui.left = nil
+      ui.right = nil
+      ui.bottom = nil
+      containerAutoload = false
+    end
+    for k,v in pairs(ui.settings.displays) do
+      ui[k] = nil
+      containerAutoload = false
+    end
+  end
+  
+  -------------[ Start by building the borders ]-------------
+
+  ui.top = ui.top or Adjustable.Container:new({
+    name = "ui.top",
+    y= 0 , height = "4c",
+    padding = 4,
+    attachedMargin = 0,
+    adjLabelstyle = ui.settings.topCSS,
+    autoLoad = containerAutoload
+  })
+  
+  ui.bottom = ui.bottom or Adjustable.Container:new({
+    name = "ui.bottom",
+    height = 105,
+    y = -105,
+    padding = 4,
+    attachedMargin = 0,
+    adjLabelstyle = ui.settings.bottomCSS,
+    autoLoad = containerAutoload
+  })
+  
+  ui.right = ui.right or Adjustable.Container:new({
+    name = "ui.right",
+    y = "0%",
+    x = "-30%",
+    height = "100%",
+    width = "30%",
+    padding = 4,
+    attachedMargin = 0,
+    adjLabelstyle = ui.settings.rightCSS,
+    autoLoad = containerAutoload
+  })
+
+  ui.left = ui.left or Adjustable.Container:new({
+    name = "ui.left",
+    x = "0%",
+    y = "0%",
+    height = "100%",
+    width = ui.consoleFontWidth * 46,
+    padding = 4,
+    attachedMargin = 10,
+    adjLabelstyle = ui.settings.leftCSS,
+    autoLoad = containerAutoload
+  })
+  
+  
+  ui.top:attachToBorder("top")
+  ui.bottom:attachToBorder("bottom")
+  ui.left:attachToBorder("left")
+  ui.right:attachToBorder("right")
+  
+  ui.top:connectToBorder("left")
+  ui.top:connectToBorder("right")
+  ui.bottom:connectToBorder("left")
+  ui.bottom:connectToBorder("right")
+
+  
+  ui.top:lockContainer("border")
+  ui.left:lockContainer("border")
+  ui.right:lockContainer("border")
+  ui.bottom:lockContainer("border")
+
+  -- Knowing the window size, lets us calculate how mush space we can use for everything else and still display the mud output
+  ui.mainWindowWidth = select(1,getMainWindowSize())-ui.left:get_width()-ui.right:get_width()
+    
+  -------------[ Build the adjustable containers ]-------------
+  for k,v in pairs(ui.settings.containers) do
+    local consoleHeight = ""
+    local consoleY = ""
+    local w,h
+    if v.fs then
+      w,h = calcFontSize(v.fs, ui.settings.consoleFont)
+    else
+      h = ui.consoleFontHeight
+    end
+    
+    if assert(type(v.height)) == "number" then
+      consoleHeight = h * v.height
+    else
+      consoleHeight = v.height
+    end
+    if assert(type(v.y)) == "number" then
+      consoleY = h * v.y
+    else
+      consoleY = v.y
+    end
+    
+    local containerName = "ui."..k
+    
+    ui[k] = ui[k] or Adjustable.Container:new({
+    name = containerName,
+    titleText = k,
+    x = v.x or 0,
+    y = consoleY,
+    padding = 5,    attachedMargin = 0,
+    width = v.width or "100%",
+    autoWrap = v.wrap or false,
+    height = consoleHeight,
+    fontSize = v.fs or ui.settings.consoleFontSize,
+    adjLabelstyle = v.customCSS or ui.settings.moveableConsoleCSS,
+    autoLoad = containerAutoload
+    }, ui[v.dest])
+    
+    ui[k]:newCustomItem("Move to left side",
+    function(self)
+      ui.putContainer("left", k)
+    end
+    )
+    
+    ui[k]:newCustomItem("Move to right side",
+    function(self)
+      ui.putContainer("right", k)
+    end
+    )
+    
+    ui[k]:newCustomItem("Move to bottom",
+    function(self)
+      ui.putContainer("bottom", k)
+    end
+    )
+    
+    ui[k]:newCustomItem("Move to top",
+    function(self)
+      ui.putContainer("top", k)
+    end
+    )
+    
+    ui[k]:newCustomItem("Pop out",
+    function(self)
+      ui.popOutContainer(k)
+    end
+    )
+    
+    ui[k]:lockContainer("border")
+  end
+  
+  -------------[ Build the EMCO and Miniconsole objects ]-------------
+  
+  for k,v in pairs(ui.settings.displays) do
+    local containerName = "ui."..k
+    local console = v.tabs
+          
+    if v.emco and not v.mapper then
+      ui[k] = EMCO:new({
+        name = containerName,
+        x = 0,
+        y = 2,
+        width = "100%",
+        height = "100%",
+        tabFontSize = ui.settings.tabFontSize,
+        tabHeight = ui.settings.tabHeight,
+        gap = ui.settings.tabGap,
+        fontSize = ui.settings.consoleFontSize,
+        font = ui.settings.consoleFont,
+        tabFont = ui.settings.consoleFont,
+        autoWrap = v.wrap or false,
+        tabBoxColor = ui.settings.tabBarColor,
+        consoleColor = ui.settings.consoleBackgroundColor,
+        activeTabFGColor = ui.settings.activeTabFGColor,
+        activeTabCSS = ui.settings.activeTab,
+        inactiveTabFGColor = ui.settings.inactiveTabFGColor,
+        inactiveTabCSS = ui.settings.inactiveTab,
+        consoles = console
+      }, ui[v.dest])
+      ui[k]:disableAllLogging()
+    elseif v.mapper then
+      ui[k] = EMCO:new({
+        name = containerName,
+        x = 0,
+        y = 2,
+        width = "100%",
+        height = "100%",
+        tabFontSize = ui.settings.tabFontSize,
+        tabHeight = ui.settings.tabHeight,
+        gap = ui.settings.tabGap,
+        fontSize = ui.settings.consoleFontSize,
+        font = ui.settings.consoleFont,
+        tabFont = ui.settings.consoleFont,
+        allTab = false,
+        autoWrap = false,
+        mapTab = true,
+        mapTabName = v.mapTab,
+        tabBoxColor = ui.settings.consoleBackgroundColor,
+        consoleContainerColor = ui.settings.consoleBackgroundColor,
+        consoleColor = ui.settings.consoleBackgroundColor,
+        activeTabFGColor = ui.settings.activeTabFGColor,
+        activeTabCSS = ui.settings.activeTab,
+        inactiveTabFGColor = ui.settings.inactiveTabFGColor,
+        inactiveTabCSS = ui.settings.inactiveTab,
+        consoles = console
+      }, ui[v.dest])
+      ui[k]:disableAllLogging()
+      
+      -- Set a map zoom level that is comfortable for most people
+      setMapZoom(10)
+
+      -- Set the mapper background color the same as everything else
+      setMapBackgroundColor(15,15,15)
+      
+    else
+      ui[k] = Geyser.MiniConsole:new({
+        name = containerName,
+        x = v.x or 0,
+        y = 0,
+        width = v.width or "100%",
+        padding = 4,
+        height = "100%",
+        fontSize = ui.settings.promptFontSize,
+        font = ui.settings.consoleFont,
+        adjLabelstyle = ui.settings.noborderConsoleCSS,
+        autoWrap = false,
+        color = ui.settings.consoleBackgroundColor,
+        autoLoad = containerAutoload,
+      }, ui[v.dest])
+    end
+  end
+  
+  ui.createPlayerGuages()
+  if arg == "layout_update" then
+    ui.updateDisplays({type = "update"})
+  else
+    ui.updateDisplays()
+  end
+  
+  if arg == "reset" then
+    ui.displayUIMessage("UI layout set to default")
+  end
+  if arg == "startup" then
+    ui.displayUIMessage("UI containers created\n")
+    raiseEvent("UICreated")
+  end
+end</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Create Player Gauges</name>
+          <script>function ui.createPlayerGuages()
+  
+  -- Set all the styles needed for the gauges
+
+  local gaugeBorder = "border-radius: 3px;border: 1px solid rgba(160, 160, 160, 50%);"
+
+  ui.styles = {
+    
+    gaugeText = f[[{ui.cssFont} qproperty-alignment: 'AlignRight|AlignVCenter';]],
+    
+    HPGaugeFront = f[[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(150, 25, 25), stop: 0.1 rgb(180,0,0), stop: 0.85 rgb(155,0,0), stop: 1 rgb(130,0,0)); {gaugeBorder}]],
+    HPGaugeBack = f[[background-color: rgb(60, 0, 0); {gaugeBorder}]],
+    
+    SPGaugeFront = f[[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(127, 0, 87), stop: 0.1 rgb(147, 0, 107), stop: 0.85 rgb(117, 0, 77), stop: 1 rgb(117, 0, 67)); {gaugeBorder}]],
+    SPGaugeBack = f[[background-color: rgb(60, 0, 60); {gaugeBorder}]],
+     
+    balanceGaugeFront = f[[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(25, 25, 150), stop: 0.1 rgb(0,0,180), stop: 0.85 rgb(0,0,155), stop: 1 rgb(0,0,130)); {gaugeBorder}]],
+    balanceGaugeBack = f[[background-color: rgb(0, 0, 60); {gaugeBorder}]],
+    
+    vitalsLabel = f[[font-weight: 400; padding-left: 2px; background-color: rgba(0,0,0,0%); {ui.settings.cssFont}]],
+    balanceLabel = f[[font-weight: 200; qproperty-alignment: 'AlignRight|AlignVCenter'; background-color: rgba(0,0,0,0%); {ui.cssFont}]],
+    
+    enemyGaugeFront = f[[{ui.settings.cssFont} background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(150, 25, 25), stop: 0.1 rgb(180,0,0), stop: 0.85 rgb(155,0,0), stop: 1 rgb(130,0,0)); {gaugeBorder}]],
+    enemyGaugeBack = f[[background-color: rgb(60, 0, 0); {gaugeBorder}]],
+    
+  }
+
+  -- Create the HP guage
+  ui.hpGauge = Geyser.Gauge:new({
+  name="hpGauge",
+  x = 10,
+  y = 0,
+  width= 250,
+  height= 20,
+  font = ui.settings.consoleFont,
+  
+  }, ui.gaugeDisplay)
+  
+  -- set the front and back styling for the guage
+  ui.hpGauge.front:setStyleSheet(ui.styles.HPGaugeFront)
+  ui.hpGauge.back:setStyleSheet(ui.styles.HPGaugeBack)
+  
+  -- Set the gauge text styling
+  ui.hpGauge.text:setStyleSheet(ui.styles.gaugeText)
+  ui.hpGauge.text:setFontSize(ui.settings.gaugeFontSize)
+  
+  -- Center the text on the gauge
+  ui.hpGauge.text:echo(nil, "nocolor", "c")
+  
+  -- Set the label for the guage
+  ui.hpLabel = Geyser.Label:new({
+    name = "hpLabel",
+    x = 5,
+    y = 0,
+    width = 250,
+    height = 20,
+    message = "HP",
+  }, ui.hpGauge)
+  
+  ui.hpLabel:setStyleSheet(ui.styles.vitalsLabel)
+  ui.hpLabel:setFontSize(ui.settings.gaugeFontSize)  
+  
+  
+  -- Create the Mana guage
+  ui.spGauge = Geyser.Gauge:new({
+  name="spGauge",
+  x = 10,
+  y = 30,
+  width = 250,
+  height = 20,
+  }, ui.gaugeDisplay)
+  
+  -- set the front and back styling for the guage
+  ui.spGauge.front:setStyleSheet(ui.styles.SPGaugeFront)
+  ui.spGauge.back:setStyleSheet(ui.styles.SPGaugeBack)
+  
+  -- Set the gauge text styling
+  ui.spGauge.text:setStyleSheet(ui.styles.gaugeText)
+  ui.spGauge.text:setFontSize(ui.settings.gaugeFontSize)
+  
+  -- Center the text on the gauge
+  ui.spGauge.text:echo(nil, "nocolor", "c")
+  
+  -- Set the label for the guage
+  ui.spLabel = Geyser.Label:new({
+    name = "spLabel",
+    x = 5,
+    y = 0,
+    width = 250,
+    height = 20,
+    message = "SP",
+  }, ui.spGauge)
+ 
+  ui.spLabel:setStyleSheet(ui.styles.vitalsLabel)
+  ui.spLabel:setFontSize(ui.settings.gaugeFontSize)  
+  
+  -- Create the Balance guage
+  ui.balGauge = Geyser.Gauge:new({
+  name = "balGauge",
+  x = 270,
+  y = 30,
+  width = 250,
+  height = 20,
+  }, ui.gaugeDisplay)
+  
+  -- set the front and back styling for the guage
+  ui.balGauge.front:setStyleSheet(ui.styles.balanceGaugeFront)
+  ui.balGauge.back:setStyleSheet(ui.styles.balanceGaugeBack)
+  
+  -- Set the gauge text styling
+  ui.balGauge.text:setStyleSheet(ui.styles.gaugeText)
+  ui.balGauge.text:setFontSize(ui.settings.gaugeFontSize)
+  
+  -- Center the text on the gauge
+  ui.balGauge.text:echo(nil, "nocolor", "c")
+  
+  -- Create the Enemy HP guage
+  ui.enemyGauge = Geyser.Gauge:new({
+  name="enemyGauge",
+  x = 270,
+  y = 0,
+  width = 250,
+  height = 20,
+  }, ui.gaugeDisplay)
+  -- set the front styling for the Enemy HP guage
+  ui.enemyGauge.front:setStyleSheet(ui.styles.enemyGaugeFront)
+  -- set the back styling for the Enemy HP guage
+  ui.enemyGauge.back:setStyleSheet(ui.styles.enemyGaugeBack)
+  -- Set the gauge text styling
+  ui.enemyGauge.text:setStyleSheet(ui.styles.gaugeText)
+  ui.enemyGauge.text:setFontSize(ui.settings.gaugeFontSize)
+  ui.enemyGauge.text:echo(nil, "nocolor", "c")
+
+  
+  -- Set the default label for the Enemy HP guage
+  ui.enemyLabel = Geyser.Label:new({
+    name = "enemyLabel",
+    x = 5,
+    y = 0,
+    width = "100%",
+    height = "100%",
+  }, ui.enemyGauge)
+  -- set the label background to be transparent
+  ui.enemyLabel:setStyleSheet(ui.styles.vitalsLabel)
+  ui.enemyLabel:setFontSize(ui.settings.gaugeFontSize)   
+end</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Container Functions</name>
+          <script>function ui.getContainerPositions()
+  ui.containerPositions = {}
+  Adjustable.Container:doAll(
+  function(self)
+    local name = self.name
+    
+    if string.match(self.name, "container") then
+      display(self.windowList[windowName])
+      ui.containerPositions[name] = {}
+      ui.containerPositions[name].x = self:get_x()
+      ui.containerPositions[name].y = self:get_y()
+      ui.containerPositions[name].height = self:get_height()
+      ui.containerPositions[name].width = self:get_width()
+    end
+  end
+  )
+end
+
+
+function ui.putContainer(parentContainer, childContainer)
+  local parentContainer = parentContainer
+  local childContainer = childContainer
+  
+  ui[parentContainer]:add(ui[childContainer])
+  ui[childContainer]:move(0,_)
+  ui[childContainer]:connectToBorder(parentContainer)
+  ui[childContainer]:resize("100%",_)
+end
+
+
+function ui.popOutContainer(container)
+  local container = container
+  local width = ui[container]:get_width()
+  local height = ui[container]:get_height()
+  local mainW,mainH = getMainWindowSize()
+  
+  ui[container]:changeContainer(Geyser)
+  ui[container]:resize(width,height)
+  ui[container]:move("25%","25%")
+end
+
+function ui.resetEMCOContainer()
+  for k,v in pairs(ui.settings.displays) do
+    if not (k == "promptDisplay" or k == "gaugeDisplay" or k == "promptRightDisplay") then
+      ui[k]:reset()
+    end
+  end
+end
+
+function ui.showContainerState()
+  echo("\n")
+  cecho("Container Name:     State:     [     Actions       ]")
+  echo("\n")
+  cecho(string.rep("-",80))
+  echo("\n")
+  for k,v in spairs(ui.settings.containers) do
+    local state
+    if ui[k].hidden then state = "&lt;firebrick&gt;Hidden&lt;reset&gt;" else state = "&lt;ForestGreen&gt;Shown&lt;reset&gt;" end
+    cecho("  "..k..":"..string.rep(" ", 18-string.len(k))..state)
+    cecho(string.rep(" ", 10-string.len(cecho2string(state))))
+    cechoLink("&lt;u&gt;Show&lt;/u&gt;",function() ui[k]:show() ui.showContainerState()end,"Show container", true)
+    cechoLink("    &lt;u&gt;Hide&lt;/u&gt;",function() ui[k]:hide() ui.showContainerState()end,"Hide container", true)
+    cechoLink("    &lt;u&gt;Flash&lt;/u&gt;",function() ui[k]:flash() end,"Identify the container", true)
+    echo("\n")echo("\n")
+  end
+  echo("\n")
+end</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        
+      </ScriptGroup>
+      <ScriptGroup isActive="yes" isFolder="yes">
+          
+        <name>Update Container Info</name>
+        <script/>
+          
+        <packageName/>
+        
+        <eventHandlerList>
+</eventHandlerList>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Update all displays</name>
+          <script>function ui.updateDisplays(args)
+  args = args or {}
+  ui.updatePromptDisplay()
+  ui.updateEQDisplay()
+  ui.updateInvDisplay()
+  ui.updateRoomDisplay()
+  ui.updateEnemyGauge()
+  ui.updateBalanceGauge()
+  ui.updatePlayerGauges()
+  ui.updateChannelDisplay()
+  ui.updateCharDisplay()
+  ui.updateWhoDisplay()
+  ui.updatePromptRightDisplay()
+  ui.updateAffectsDisplay()
+  ui.updateGroupDisplay()
+  ui.updateTopBar()
+  ui.updateCombatDisplay()
+  ui.resizeEvent()
+end</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Prompt</name>
+          <script>function ui.updatePromptDisplay()
+  if gmcp.Char == nil or gmcp.Char.Vitals == nil or gmcp.Char.Worth == nil or gmcp.Char.Inventory == nil then
+    return
+  end
+  
+  -- Cache values with sensible defaults.
+  local xp, xptnl = 100, 1000
+  local energy, energyMax = 100, 100
+  local xpPct, xpPctPretty = 0, 0
+  local gold, bank = 0, 0
+  local carry, capacity = 0, 0
+  --local spell, charge = "", ""
+
+  if gmcp.Char.Worth then
+    xp    = gmcp.Char.Worth.xp or 0
+    xptnl = gmcp.Char.Worth.tnl or 0
+    xpPct = (xp / xptnl) * 100
+    xpPctPretty = math.floor(xpPct + 0.5)
+    gold  = gmcp.Char.Worth.gold_carry or 0
+    bank  = gmcp.Char.Worth.gold_bank or 0
+    xpPct = (xp / xptnl) * 100
+    xpPctPretty = math.floor(xpPct + 0.5)
+  end
+  
+  if gmcp.Char.Inventory and gmcp.Char.Inventory.Backpack then
+    carry    = gmcp.Char.Inventory.Backpack.count or 0
+    capacity = gmcp.Char.Inventory.Backpack.max or 0
+  end
+
+  local promptWidth = ui.mainWindowWidth / ui.consoleFontWidth
+  local disp = ui.promptDisplay  -- cache the display reference
+
+  disp:clear()
+  --disp:cecho(" &lt;grey&gt;-- &lt;violet&gt;Spell prepared&lt;white&gt;: &lt;DarkSeaGreen&gt;[ ")
+  --disp:cechoLink("&lt;u&gt;&lt;violet&gt;" .. spell .. "&lt;/u&gt;", [[send("t")]], "Use spell", true)
+  --disp:cecho("&lt;DarkSeaGreen&gt; ] &lt;grey&gt;")
+
+  --if charge ~= "" then
+  --  disp:cecho("&lt;SkyBlue&gt;Charge&lt;white&gt;: &lt;DarkSeaGreen&gt;[ &lt;green&gt;" .. charge)
+  --  disp:cecho("&lt;DarkSeaGreen&gt; ] &lt;grey&gt;")
+  --end
+  
+
+  --local repCount = promptWidth - string.len(spell) - 24
+  local repCount = promptWidth
+  disp:cecho(string.rep("-", repCount))
+  disp:cecho("\n")
+  
+  disp:cecho(" &lt;DarkSeaGreen&gt;[&lt;white&gt;EN&lt;gold&gt;:&lt;green&gt; " ..
+    ui.addNumberSeparator(energy) ..
+    "&lt;grey&gt;/&lt;grey&gt;" ..
+    ui.addNumberSeparator(energyMax) ..
+    "&lt;DarkSeaGreen&gt;] &lt;grey&gt;-")
+  
+  disp:cecho(" &lt;DarkSeaGreen&gt;[&lt;white&gt;XP&lt;gold&gt;:&lt;green&gt; " ..
+    ui.addNumberSeparator(xp) ..
+    "&lt;grey&gt;/&lt;grey&gt;" ..
+    ui.addNumberSeparator(xptnl) ..
+    " &lt;gold&gt;" .. xpPctPretty .. "&lt;white&gt;%&lt;grey&gt; TNL&lt;DarkSeaGreen&gt;] &lt;grey&gt;-")
+  
+  disp:cecho(" &lt;DarkSeaGreen&gt;[&lt;white&gt;Gold&lt;gold&gt;:&lt;gold&gt; " ..
+    ui.addNumberSeparator(gold) ..
+    " &lt;white&gt;Bank&lt;gold&gt;:&lt;gold&gt; " ..
+    ui.addNumberSeparator(bank) ..
+    "&lt;DarkSeaGreen&gt;] &lt;grey&gt;-")
+  
+  disp:cecho(" &lt;DarkSeaGreen&gt;[&lt;DarkTurquoise&gt;Carry&lt;white&gt;: &lt;grey&gt;" ..
+    carry .. "&lt;white&gt;/&lt;grey&gt;" .. capacity ..
+    "&lt;DarkSeaGreen&gt;]")
+end</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Prompt Right</name>
+          <script>function ui.updatePromptRightDisplay()
+  if gmcp.Char == nil then return end
+  local mainWidth = ui.mainWindowWidth
+  ui.container9:resize(mainWidth-560,52)
+  ui.promptRightDisplay:enableAutoWrap()
+  ui.promptRightDisplay:clear()
+    
+  ui.promptRightDisplay:cecho("This area is not used yet...")
+end</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Who</name>
+          <script>function ui.updateWhoDisplay()
+--display(gmcp.Game)
+if gmcp.Game == nil or gmcp.Game.Who == nil or gmcp.Game.Who.Players == nil then return end
+
+  ui.charDisplay:clear("Wholist")
+  ui.charDisplay:cecho("Wholist", fText.fText("&lt;white&gt;[ &lt;gold&gt;Online players&lt;gold&gt;: &lt;white&gt;"..#gmcp.Game.Who.Players.."&lt;white&gt; ]&lt;reset&gt;", {alignment = "center", formatType = "c", width = math.floor(ui.charDisplay:get_width()/ui.consoleFontWidth), cap = "", spacer = "-", inside = true, mirror = true}))
+  ui.charDisplay:cecho("Wholist","\n")
+  for k,v in ipairs(gmcp.Game.Who.Players) do
+    if k == #gmcp.Game.Who.Players then
+      ui.charDisplay:cecho("Wholist","&lt;forest_green&gt;"..gmcp.Game.Who.Players[k].name)
+    else
+      ui.charDisplay:cecho("Wholist","&lt;forest_green&gt;"..gmcp.Game.Who.Players[k].name..", ")
+    end
+  end
+end</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Inventory</name>
+          <script>function ui.updateInvDisplay()
+  if gmcp.Char == nil then return end
+  if gmcp.Char.Inventory == nil then return end
+  if gmcp.Char.Inventory.Backpack == nil then return end
+  if gmcp.Char.Inventory.Backpack.items == nil then return end
+
+  ui.eqDisplay:clear("Inventory")
+
+  ui.eqDisplay:cecho("Inventory","&lt;cyan&gt;R/C to look, drop or wear")
+  ui.eqDisplay:cecho("Inventory","\n\n")
+
+  local backpackItems = gmcp.Char.Inventory.Backpack.items
+
+  if #backpackItems &gt; 0 then
+    for _, item in ipairs(backpackItems) do
+      ui.eqDisplay:cechoPopup("Inventory",
+        "&lt;sandy_brown&gt;  " .. ui.titleCase(item.name) .. "\n",
+        {
+          [[send("look ]] .. item.id .. [[", false)]],
+          [[send("drop ]] .. item.id .. [[", false)]],
+          [[send("wear ]] .. item.id .. [[", false)]],
+        },
+        {
+          "Look at " .. ui.titleCase(item.name),
+          "Drop " .. ui.titleCase(item.name),
+          "Wear " .. ui.titleCase(item.name)
+        },
+        true
+      )
+    end
+  else
+    ui.eqDisplay:cecho("Inventory", "\n  &lt;sandy_brown&gt;You are not carrying anything.")
+  end
+end</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Equipment</name>
+          <script>function ui.updateEQDisplay()
+  if not gmcp.Char or not gmcp.Char.Inventory then return end
+
+  ui.eqDisplay:clear("Equipment")
+
+  ui.eqDisplay:cecho("Equipment", "&lt;green&gt;" .. string.format("%-11s", "Location"))
+  ui.eqDisplay:cecho("Equipment", "&lt;cyan&gt;R/C to look or remove\n")
+
+  -- Get all locations from Worn inventory
+  local locations = {}
+  if gmcp.Char.Inventory.Worn then
+    for location, _ in pairs(gmcp.Char.Inventory.Worn) do
+      table.insert(locations, location)
+    end
+  end
+
+  -- Sort locations alphabetically
+  table.sort(locations)
+
+  for _, slot in ipairs(locations) do
+    local item = nil
+    -- Check Wielded first
+    if gmcp.Char.Inventory.Wielded and gmcp.Char.Inventory.Wielded[slot] and gmcp.Char.Inventory.Wielded[slot].name ~= "-nothing-" then
+      item = gmcp.Char.Inventory.Wielded[slot]
+    elseif gmcp.Char.Inventory.Worn and gmcp.Char.Inventory.Worn[slot] and gmcp.Char.Inventory.Worn[slot].name ~= "-nothing-" then
+      -- Check Worn if not wielded
+      item = gmcp.Char.Inventory.Worn[slot]
+    end
+
+    -- Display the slot name
+    ui.eqDisplay:cecho("Equipment", "\n&lt;snow&gt;" .. string.format("%-11s", ui.titleCase(slot)))
+
+    if not item then
+      ui.eqDisplay:cecho("Equipment", "&lt;red&gt;---")
+    else
+      ui.eqDisplay:cechoPopup("Equipment",
+        "&lt;sandy_brown&gt;" .. ui.titleCase(item.name),
+        {
+          [[send("look ]] .. item.id .. [[", false)]],
+          [[send("remove ]] .. item.id .. [[", false)]],
+        },
+        {
+          "Look at " .. ui.titleCase(item.name),
+          "Remove " .. ui.titleCase(item.name),
+        },
+        true
+      )
+    end
+  end
+end</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Pets</name>
+          <script>function ui.updatePetDisplay()
+  -- Ensure GMCP data is valid
+  if not gmcp.Char or not gmcp.Char.Inventory or not gmcp.Char.Inventory.Pets then
+    ui.eqDisplay:clear("Pets")
+    ui.eqDisplay:cecho("Pets", "\nPets are not implemented yet here.")
+    return
+  end
+
+  ui.eqDisplay:clear("Pets")
+
+  ui.eqDisplay:cecho("Pets", "&lt;green&gt;" .. string.format("%-15s", "Companions"))
+  ui.eqDisplay:cecho("Pets", "&lt;cyan&gt;Right-click to look or remove\n")
+
+  -- Display Leading
+  ui.eqDisplay:cecho("Pets", "\n&lt;sandy_brown&gt;" .. string.format("%-15s", "Leading"))
+  local leading_item = gmcp.Char.Inventory.Pets.leading
+  if leading_item == "" then
+    ui.eqDisplay:cecho("Pets", "&lt;red&gt;---")
+  else
+    local itemName = (type(leading_item) == "table" and leading_item.name) or "Unknown Companion"
+    local itemId   = (type(leading_item) == "table" and leading_item.id) or "?"
+    ui.eqDisplay:cechoPopup("Pets",
+      "&lt;reset&gt;" .. itemName .. " &lt;gray&gt;[" .. itemId .. "]",
+      {
+        [[send("look ]] .. itemId .. [[", false)]],
+        [[send("remove ]] .. itemId .. [[", false)]],
+      },
+      {
+        "Look at " .. itemName,
+        "Remove " .. itemName,
+      },
+      true
+    )
+  end
+
+  -- Display Mount
+  ui.eqDisplay:cecho("Pets", "\n&lt;sandy_brown&gt;" .. string.format("%-15s", "Mount"))
+  local mount_item = gmcp.Char.Inventory.Pets.mount
+  if mount_item == "" then
+    ui.eqDisplay:cecho("Pets", "&lt;red&gt;---")
+  else
+    local itemName = (type(mount_item) == "table" and mount_item.name) or "Unknown Companion"
+    local itemId   = (type(mount_item) == "table" and mount_item.id) or "?"
+    ui.eqDisplay:cechoPopup("Pets",
+      "&lt;reset&gt;" .. itemName .. " &lt;gray&gt;[" .. itemId .. "]",
+      {
+        [[send("look ]] .. itemId .. [[", false)]],
+        [[send("remove ]] .. itemId .. [[", false)]],
+      },
+      {
+        "Look at " .. itemName,
+        "Remove " .. itemName,
+      },
+      true
+    )
+  end
+
+  -- Display Pets (list of multiple pets)
+  ui.eqDisplay:cecho("Pets", "\n&lt;sandy_brown&gt;" .. string.format("%-15s", "Pets"))
+  local pets_list = gmcp.Char.Inventory.Pets.pets
+  if not pets_list or #pets_list == 0 then
+    ui.eqDisplay:cecho("Pets", "&lt;red&gt;---")
+  else
+    for _, pet_item in ipairs(pets_list) do
+      ui.eqDisplay:cecho("Pets", "\n") -- separate lines for each pet
+      local itemName = pet_item.name or "Unknown Pet"
+      local itemId   = pet_item.id or "?"
+      ui.eqDisplay:cechoPopup("Pets",
+        "&lt;reset&gt;" .. itemName .. " &lt;gray&gt;[" .. itemId .. "]",
+        {
+          [[send("look ]] .. itemId .. [[", false)]],
+          [[send("remove ]] .. itemId .. [[", false)]],
+        },
+        {
+          "Look at " .. itemName,
+          "Remove " .. itemName,
+        },
+        true
+      )
+    end
+  end
+end</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Room</name>
+          <script>-- Define constants and helper functions outside the update function
+ui.questStatusColor = ui.questStatusColor or {
+  Undiscovered = "&lt;red&gt;",
+  Discovered   = "&lt;orange&gt;",
+  Finished     = "&lt;green&gt;",
+  Unfinished   = "&lt;cyan&gt;",
+  Started      = "&lt;dodger_blue&gt;",
+}
+
+local function getNames(tbl)
+  local names = {}
+  for _, entry in ipairs(tbl or {}) do
+    names[#names + 1] = entry.name
+  end
+  return table.concat(names, ", ")
+end
+
+function ui.updateRoomDisplay()
+  -- Cache frequently accessed tables
+  local room = gmcp.Room
+  if not (room and room.Info) then return end
+  
+  -- Build info with defaults
+  local info = {
+    num = room.Info.num or "0",
+    environment = room.Info.environment or "Unknown",
+    area = room.Info.area or "Unknown Area",
+    details = room.Info.details or {},
+    quest = room.Info.quest or 0,
+    queststatus = room.Info.queststatus or "Undiscovered",
+    questname = room.Info.questname or "No Quest"
+  }
+  
+  -- Build content with defaults
+  local content = {
+    Adventures = room.Content and room.Content.Adventures or {},
+    NPC = room.Content and room.Content.NPC or {},
+    Items = room.Content and room.Content.Items or {}
+  }
+
+  -- Cache and compute values once
+  local room_features = (info.details and #info.details &gt; 0) and table.concat(info.details, ", ") or "None"
+  local width = math.floor(ui.roomDisplay:get_width() / ui.consoleFontWidth)
+  
+  ui.roomDisplay:clear("Room")
+  
+  -- Build and display header
+  local header = fText.fText(
+    "&lt;white&gt;[ &lt;gold&gt;Room&lt;white&gt;: " .. info.num .. " - " .. info.environment .. " &lt;white&gt;]&lt;reset&gt;",
+    { alignment = "center", formatType = "c", width = width, cap = "", spacer = "-", inside = true, mirror = true }
+  )
+  ui.roomDisplay:cecho("Room", header .. "\n")
+  
+  -- Display area and features
+  local area = ui.titleCase(string.gsub(info.area, "_", " "))
+  ui.roomDisplay:cecho("Room", "&lt;dodger_blue&gt;Area&lt;white&gt;     : &lt;reset&gt;" .. area .. "\n")
+  ui.roomDisplay:cecho("Room", "&lt;dodger_blue&gt;Features&lt;white&gt; : &lt;reset&gt;" .. room_features .. "\n")
+  
+  -- Display quest information
+  if info.quest == 0 then
+    ui.roomDisplay:cecho("Room", "&lt;dodger_blue&gt;Quest&lt;white&gt;    : &lt;reset&gt;None")
+  else
+    ui.roomDisplay:cecho("Room", "&lt;dodger_blue&gt;Quest&lt;white&gt;    : &lt;gold&gt;" .. info.quest .. " &lt;white&gt;(" .. ui.questStatusColor[info.queststatus] .. info.queststatus .. "&lt;white&gt;)\n")
+    ui.roomDisplay:cecho("Room", "&lt;dodger_blue&gt;QName&lt;white&gt;    : &lt;reset&gt;")
+    ui.roomDisplay:cechoLink("Room",
+      "&lt;reset&gt;" .. [["&lt;u&gt;]] .. info.questname .. [[&lt;/u&gt;"]],
+      [[send("journal read ]] .. info.quest .. [[")]],
+      "Read journal entry",
+      true
+    )
+  end
+  ui.roomDisplay:cecho("Room", "\n\n")
+  
+  -- Build lists from sub-tables
+  local adventureList = getNames(content.Adventures)
+  local npcList = getNames(content.NPC)
+  local itemList = getNames(content.Items)
+  
+  -- Display lists
+  ui.roomDisplay:cecho("Room", 
+      "&lt;ForestGreen&gt;Adventurers&lt;white&gt;:&lt;reset&gt; " .. adventureList ..
+      "\n&lt;cyan&gt;NPC's &lt;white&gt;:&lt;reset&gt; "     .. npcList ..
+      "\n&lt;green&gt;Items &lt;white&gt;: &lt;reset&gt;"      .. itemList .. "\n\n"
+  )
+  
+  -- Display personal notes
+  ui.roomDisplay:cecho("Room", "&lt;DodgerBlue&gt;Personal notes&lt;grey&gt;: ui note &lt;note&gt;")
+  local roomNote = ui.roomNotes[info.num]
+  if roomNote then
+    ui.roomDisplay:cecho("Room", "\n" .. "&lt;gold&gt;" .. roomNote.notes)
+  end
+end</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Character</name>
+          <script>function ui.updateCharDisplay()
+  -- Early returns if required GMCP data is missing
+  if gmcp.Char == nil then return end
+  if gmcp.Char.Info == nil then return end
+  if gmcp.Char.Worth == nil then return end
+  
+  -- Extract character info with defaults
+  local name = gmcp.Char.Info.name or "None"
+  local race = ui.titleCase(gmcp.Char.Info.race) or "None"
+  local class = ui.titleCase(gmcp.Char.Info.class) or "None"
+  local alignment = ui.titleCase(gmcp.Char.Info.alignment) or "None"
+  local level = gmcp.Char.Info.level or 1
+  
+  -- Clear and update display
+  ui.charDisplay:clear("Character")
+  
+  -- Header with centered formatting
+  ui.charDisplay:cecho(
+    "Character", 
+    fText.fText(
+      "&lt;white&gt;[ &lt;gold&gt;Name: &lt;dodger_blue&gt;"..name.."&lt;white&gt; Lvl&lt;gold&gt;: &lt;dodger_blue&gt;"..level.."&lt;white&gt; ]&lt;reset&gt;", 
+      {
+        alignment = "center",
+        formatType = "c",
+        width = math.floor(ui.charDisplay:get_width()/ui.consoleFontWidth),
+        cap = "",
+        spacer = "-",
+        inside = true,
+        mirror = true
+      }
+    )
+  )
+  
+  ui.charDisplay:cecho("Character", "\n")
+  ui.charDisplay:cecho("Character", "&lt;white&gt;Race&lt;gold&gt;: &lt;grey&gt;"..race.."  &lt;cyan&gt;Class&lt;gold&gt;: &lt;grey&gt;"..class)
+  ui.charDisplay:cecho("Character", "\n")
+  ui.charDisplay:cecho("Character", "&lt;white&gt;Alignment&lt;gold&gt;: &lt;grey&gt;"..alignment)
+  ui.charDisplay:cecho("Character", "\n\n")
+  
+  -- Stats section (if available)
+  if gmcp.Char.Stats then
+    -- Worth points
+    ui.charDisplay:cecho(
+      "Character",
+      "&lt;SeaGreen&gt;Skill Points&lt;white&gt;: &lt;white&gt;"..(gmcp.Char.Worth.skillpoints or "0")..
+      "  &lt;DodgerBlue&gt;Training Points&lt;white&gt;: &lt;white&gt;"..(gmcp.Char.Worth.trainingpoints or "0")
+    )
+    ui.charDisplay:cecho("Character", "\n\n")
+    
+    -- Stats display (paired for better layout)
+    ui.charDisplay:cecho("Character", "&lt;SkyBlue&gt;Mysticism&lt;white&gt;: &lt;gold&gt;"..string.format("%2d", gmcp.Char.Stats.mysticism or 0))
+    ui.charDisplay:cecho("Character", "    &lt;SkyBlue&gt;Perception&lt;white&gt;:    &lt;gold&gt;"..string.format("%2d", gmcp.Char.Stats.perception or 0))
+    ui.charDisplay:cecho("Character", "\n")
+    
+    ui.charDisplay:cecho("Character", "&lt;SkyBlue&gt;Smarts&lt;white&gt;:    &lt;gold&gt;"..string.format("%2d", gmcp.Char.Stats.smarts or 0))
+    ui.charDisplay:cecho("Character", "    &lt;SkyBlue&gt;Speed&lt;white&gt;:         &lt;gold&gt;"..string.format("%2d", gmcp.Char.Stats.speed or 0))
+    ui.charDisplay:cecho("Character", "\n")
+    
+    ui.charDisplay:cecho("Character", "&lt;SkyBlue&gt;Strength&lt;white&gt;:  &lt;gold&gt;"..string.format("%2d", gmcp.Char.Stats.strength or 0))
+    ui.charDisplay:cecho("Character", "    &lt;SkyBlue&gt;Vitality&lt;white&gt;:      &lt;gold&gt;"..string.format("%2d", gmcp.Char.Stats.vitality or 0))
+  end
+end</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Player Gauges</name>
+          <script>function ui.updatePlayerGauges()
+  if gmcp.Char == nil or gmcp.Char.Vitals == nil or gmcp.Char.Vitals.hp == nil then
+    ui.hpGauge:setValue(100,100)
+    ui.spGauge:setValue(100,100)
+    return
+  end
+  
+  --If gmcp information is availabe set the values, otherwise use dummy values.
+  if gmcp.Char.Vitals then
+    hp = gmcp.Char.Vitals.hp or 0
+    hp_max = gmcp.Char.Vitals.hp_max or 0
+    sp = gmcp.Char.Vitals.sp or 0
+    sp_max = gmcp.Char.Vitals.sp_max or 0
+  
+    -- Update health
+    ui.hpGauge:setValue(hp, hp_max, f"&lt;center&gt;{hp}/{hp_max}&lt;/center&gt;")
+    
+    -- Update mana
+    ui.spGauge:setValue(sp, sp_max, f"&lt;center&gt;{sp}/{sp_max}&lt;/center&gt;")
+    
+  else
+    ui.hpGauge:setValue(100,100)
+    ui.spGauge:setValue(100,100)
+  end
+
+end</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Balance Gauge</name>
+          <script>function ui.updateBalanceGauge()
+  if gmcp.Char == nil or gmcp.Char.Balance == nil or gmcp.Char.Balance.unbalance == nil then
+    ui.balGauge:setValue(100, 100, f"&lt;center&gt;Balanced (not used)&lt;/center&gt;")
+    return
+  end
+  --If gmcp information is availabe set the values, otherwise use dummy values.
+  local bal = gmcp.Char.Balance.unbalance or 0
+  local maxbal = gmcp.Char.Balance.max_unbalance or 0
+  
+  if tonumber(bal) ~= 0 then
+    -- Update Balance
+    local balance = maxbal-bal
+      --if string.len(tostring(bal)) &lt; 2 then
+        --ui.balGauge:setValue(balance, maxbal, f"&lt;center&gt;"..math.floor(bal)..".0&lt;/center&gt;")
+      --else
+        ui.balGauge:setValue(balance, maxbal, f"&lt;center&gt;"..bal.."&lt;/center&gt;")
+      --end    
+  else
+    ui.balGauge:setValue(100, 100, f"&lt;center&gt;Balanced&lt;/center&gt;")
+    -- Raise an event we can hook into if something needs to happen on regaining balance
+    raiseEvent("ui.charBalanced")
+  end
+end</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Enemy Gauge</name>
+          <script>function ui.updateEnemyGauge()
+  if gmcp.Char == nil or gmcp.Char.Enemies == nil then
+    ui.enemyGauge:setValue(100,100, f"&lt;center&gt;No Enemy (not used)&lt;/center&gt;")
+    return
+  end
+  --If gmcp information is availabe set the values, otherwise use dummy values.
+  if gmcp.Char.Enemies and gmcp.Char.Enemies[1] then
+    -- Update enemy health
+    
+    ui.enemyGauge.front:setStyleSheet(f[[{ui.settings.cssFont} background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(150, 25, 25), stop: 0.1 rgb(180,0,0), stop: 0.85 rgb(155,0,0), stop: 1 rgb(130,0,0));border-radius: 3px;border: 1px solid rgba(160, 160, 160, 50%);]]) 
+    
+    if 1 &gt; 2 then
+      ui.enemyGauge:setValue(gmcp.Char.Enemies[1].hp, gmcp.Char.Enemies[1].maxhp, f"&lt;center&gt;"..gmcp.Char.Enemies[1].name.."&lt;/center&gt;")
+      else 
+      ui.enemyGauge:setValue(gmcp.Char.Enemies[1].hp, gmcp.Char.Enemies[1].maxhp, f"")
+    end
+
+    ui.enemyLabel:echo(gmcp.Char.Enemies[1].hp.."/"..gmcp.Char.Enemies[1].maxhp)
+  end
+  if not gmcp.Char.Enemies[1] then
+    ui.enemyGauge.front:setStyleSheet(f[[{ui.settings.cssFont} background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(100, 25, 25), stop: 0.1 rgb(120,0,0), stop: 0.85 rgb(105,0,0), stop: 1 rgb(80,0,0));border-radius: 3px;border: 1px solid rgba(160, 160, 160, 50%);]])
+    ui.enemyGauge:setValue(100,100, f"&lt;center&gt;No Enemy&lt;/center&gt;")
+    ui.enemyLabel:echo("")
+  end
+end</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Affects</name>
+          <script>function ui.showTempAffects(name, duration, isBuff)
+    local name = name
+    local duration = duration
+    local isBuff = isBuff
+    
+    local h, m, s = shms(duration)
+    if tonumber(h) &gt; 0 then
+      h = h.."&lt;DodgerBlue&gt;h&lt;white&gt; "
+      s = ""
+    else
+      h = ""
+      s = " "..s.."&lt;gold&gt;s"
+    end
+    
+    if tonumber(m) &gt; 0 then m = m.."&lt;SkyBlue&gt;m&lt;white&gt;" else m = "" end
+    local time = h..m..s
+    local timeLen = time:gsub("&lt;%w+:?%w*&gt;", "")
+    local color = ""
+    
+    if isBuff then
+      color = "&lt;SpringGreen&gt;"
+    else
+      color = "&lt;red&gt;"
+    end
+    
+    local affect = color..name..string.rep(" ", 28-string.len(name))..string.rep(" ", math.ceil(ui.affectsDisplay:get_width()/ui.consoleFontWidth)-20-string.len(name)-(4-string.len(name))-string.len(timeLen)-6).."&lt;white&gt;"..h..m..s
+    
+    return affect
+end
+
+function ui.updateAffectsDisplay()
+  if gmcp.Char == nil or gmcp.Char.Affects == nil then
+    ui.affectsDisplay:clear("Affects")
+    ui.affectsDisplay:cecho("Affects", "\nAffects are not implemented yet here.")
+    return
+  end
+
+  ui.affectsTable = {
+    buff = {
+      permanent = {},
+      timed = {}
+    },
+    debuff = {
+      permanent = {},
+      timed = {}
+    }
+  }
+
+  ui.affectsDisplay:clear("Affects")
+  
+  ui.affectsDisplay:cecho("Affects", "&lt;white&gt;Affected by:"..string.rep(" ", math.floor(ui.affectsDisplay:get_width()/(ui.consoleFontWidth))-22).."Duration: ")
+  ui.affectsDisplay:cecho("Affects", "\n")
+  
+  local haveBuff = false
+  
+  -- Process all affects
+  for _, affect in pairs(gmcp.Char.Affects) do
+    local isBuff = affect.type ~= "debuff"
+    local isPermanent = affect.duration_cur &lt; 0
+    
+    if isBuff then
+      haveBuff = true
+      if isPermanent then
+        table.insert(ui.affectsTable.buff.permanent, affect.name)
+      else
+        table.insert(ui.affectsTable.buff.timed, ui.showTempAffects(affect.name, affect.duration_cur, true))
+      end
+    else
+      if isPermanent then
+        table.insert(ui.affectsTable.debuff.permanent, affect.name)
+      else
+        table.insert(ui.affectsTable.debuff.timed, ui.showTempAffects(affect.name, affect.duration_cur, false))
+      end
+    end
+  end
+  
+  -- Show permanent positive affects
+  for _, affect in pairs(ui.affectsTable.buff.permanent) do
+    ui.affectsDisplay:cecho("Affects", "&lt;SkyBlue&gt;"..affect..string.rep(" ", math.floor(ui.affectsDisplay:get_width()/ui.consoleFontWidth)-string.len(affect)-3).."&lt;gold&gt;-- \n")
+  end
+  
+  -- Show temporary positive effects
+  for _, affect in pairs(ui.affectsTable.buff.timed) do
+    ui.affectsDisplay:cecho("Affects", affect.."\n")
+  end
+  
+  if haveBuff then ui.affectsDisplay:echo("Affects","\n") end
+  
+  -- Show permanent negative affects
+  for _, affect in pairs(ui.affectsTable.debuff.permanent) do
+    ui.affectsDisplay:cecho("Affects", "&lt;red&gt;"..affect..string.rep(" ", math.floor(ui.affectsDisplay:get_width()/ui.consoleFontWidth)-string.len(affect)-3).."&lt;gold&gt;-- \n")
+  end
+  
+  -- Show temporary negative effects
+  for _, affect in pairs(ui.affectsTable.debuff.timed) do
+    ui.affectsDisplay:cecho("Affects", affect.."\n")
+  end
+end
+
+function ui.testStatus()
+
+gmcp.Char.Statuses.active = { 
+  {
+      buff = 0,
+      desc = "You are encumbered.",
+      duration = -0.1,
+      id = 55,
+      type = "Encumbered"
+    },
+    {
+      buff = 1,
+      desc = "You are fast",
+      duration = 10000,
+      id = 56,
+      type = "Hasted"
+    },
+    {
+      buff = 0,
+      desc = "You are fast",
+      duration = 10000,
+      id = 56,
+      type = "Stupid"
+    },
+    {
+      buff = 1,
+      desc = "You are fast",
+      duration = -1,
+      id = 56,
+      type = "Quick"
+    },
+
+  cast = "",
+  charge = "",
+  stance = "",
+}
+
+
+end
+</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Channels</name>
+          <script>function ui.updateChannelDisplay(eventName, ...)
+  eventName = eventName or ""
+  if eventName == "gmcp.Comm.Channel" then
+    if gmcp.Comm == nil then return end
+    if gmcp.Comm.Channel == nil then return end
+    
+    local senderColor
+    
+    if gmcp.Char.Info and gmcp.Comm.Channel.sender == gmcp.Char.Info.name then
+      senderColor = "&lt;gold&gt;"
+      else
+      senderColor = "&lt;sea_green&gt;"
+    end
+    
+     ui.channelColor = {
+      broadcast = {
+        channelName = "Chat",
+        channelColor = "&lt;dodger_blue&gt;"
+      },
+      whisper = {
+        channelName = "Whisper",
+        channelColor = "&lt;dark_violet&gt;"},
+      say = {
+        channelName = "Say",
+        channelColor = "&lt;dark_green&gt;"
+      },
+      party = {
+        channelName = "Group",
+        channelColor = "&lt;dark_violet&gt;"
+      },
+      shout = {
+        channelName = "Shout",
+        channelColor = "&lt;gold&gt;"
+      }
+    }
+    
+   -- Send chats to the right tab and with the right name and coloring
+    
+    local channel = gmcp.Comm.Channel.channel
+    local cc = ui.channelColor[gmcp.Comm.Channel.channel].channelColor or "&lt;reset&gt;"
+    local sender = gmcp.Comm.Channel.sender or "unknown"
+    local tabName = {ui.channelColor[gmcp.Comm.Channel.channel].channelName,"All"}
+    
+    --local time = "\n"..getTime(true, "hh:mm ")
+    
+    local time = "\n".."&lt;gold&gt;"..getTime(true, "hh:mm ")
+    local msg = gmcp.Comm.Channel.text
+    
+    for _,tab in ipairs(tabName) do
+      if tab == "All" then
+        ui.channelDisplay:cecho(tab, time.."&lt;reset&gt;("..cc..channel:title().."&lt;reset&gt;) "..senderColor..sender.."&lt;reset&gt;: "..gmcp.Comm.Channel.text)
+      else
+        ui.channelDisplay:cecho(tab, time..senderColor..sender..cc.."&lt;reset&gt;: "..gmcp.Comm.Channel.text)
+      end
+    end
+  end
+end</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Group</name>
+          <script>function ui.updateGroupDisplay()
+  ui.affectsDisplay:clear("Group")
+  ui.affectsDisplay:cecho("Group", fText.fText("&lt;white&gt;[ &lt;gold&gt;Group Name&lt;white&gt;: &lt;DodgerBlue&gt;None &lt;white&gt;]&lt;reset&gt;", {alignment = "center", formatType = "c", width = math.floor(ui.roomDisplay:get_width()/ui.consoleFontWidth), cap = "", spacer = "-", inside = true, mirror = true}))
+  ui.affectsDisplay:cecho("Group", "\n")
+  ui.affectsDisplay:cecho("Group", "\n")
+  ui.affectsDisplay:cecho("Group", "&lt;reset&gt;Once we have group information for the UI it will go here.")
+end</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Combat</name>
+          <script>function ui.updateCombatDisplay()
+  local primaryEnemy = "none"
+  local hostileGuid = {}
+  
+  if not gmcp.Char then
+    return
+  end
+  
+  if not gmcp.Char.Enemies then
+    ui.roomDisplay:clear("Combat")
+    ui.roomDisplay:cecho("Combat", "&lt;grey&gt; Not engaged in combat")
+    return
+  end
+  
+  if gmcp.Char.Enemies[1] then
+    ui.roomDisplay:switchTab("Combat")
+    ui.roomDisplay:clear("Combat")
+    
+    for k,v in pairs(gmcp.Char.Enemies) do
+      if k == 1 then 
+      table.insert(hostileGuid, v.guid)
+      ui.roomDisplay:cecho("Combat", "&lt;grey&gt;Target&lt;white&gt;:\n")
+      ui.roomDisplay:cecho("Combat", "&lt;red&gt;"..v.name..string.rep(" ", 35-string.len(v.name)-string.len(tostring(v.hp))-string.len(tostring(v.maxhp))).."&lt;gold&gt;"..v.hp.."&lt;white&gt;/&lt;gold&gt;"..v.maxhp.."\n")
+      end
+    end
+    
+    for k,v in pairs(gmcp.Char.Enemies) do
+      if k &gt; 1 then 
+      table.insert(hostileGuid, v.guid)
+      ui.roomDisplay:cecho("Combat", "\n&lt;grey&gt;Hostiles&lt;white&gt;:\n")
+      ui.roomDisplay:cecho("Combat", "&lt;red&gt;"..v.name..string.rep(" ", 35-string.len(v.name)-string.len(tostring(v.hp))-string.len(tostring(v.maxhp))).."&lt;gold&gt;"..v.hp.."&lt;white&gt;/&lt;gold&gt;"..v.maxhp.."\n")
+      end
+    end
+    
+    for k,v in pairs(gmcp.Room.Actor) do
+      if (v.type == "Peaceful" or v.type == "Innocent") and not table.contains(hostileGuid, v.guid) then
+        ui.roomDisplay:cecho("Combat", "\n&lt;grey&gt;Innocent/Peacefuls&lt;white&gt;:\n")
+        break
+      end
+    end
+    
+    for k,v in pairs(gmcp.Room.Actor) do
+      if (v.type == "Peaceful" or v.type == "Innocent") and not table.contains(hostileGuid, v.guid) then
+        ui.roomDisplay:cecho("Combat", "&lt;cyan&gt;"..v.name.."\n")
+      end
+    end
+    
+  else
+    ui.roomDisplay:switchTab("Room")
+    primaryEnemy = "none"
+    hostileGuid = {}
+    ui.roomDisplay:clear("Combat")
+    ui.roomDisplay:cecho("Combat", "&lt;grey&gt;Target&lt;white&gt;:\n")
+    ui.roomDisplay:cecho("Combat", "&lt;red&gt;"..primaryEnemy.."\n")
+  end
+  
+end</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Top Bar</name>
+          <script>function ui.updateTopBar()
+  -- Write UI version number in the top bar:
+  ui.topDisplay:clear()
+  ui.topDisplay:cecho("&lt;DarkSeaGreen&gt;GoMud UI version&lt;white&gt;: ")
+  ui.topDisplay:cechoLink("&lt;SkyBlue&gt;&lt;u&gt;"..ui.version.."&lt;/u&gt;", [[ui.gomudUIShowFullChangelog()]], "Show the GoMud UI changelog", true)
+  if mmp and mmp.version then
+    ui.topDisplay:echo("  ")
+    ui.topDisplay:cecho("&lt;DarkSeaGreen&gt;Mapper Version&lt;white&gt;: &lt;SkyBlue&gt;"..mmp.version)
+  end
+  if ui.crowdmapVersion then
+    ui.topDisplay:echo("  ")
+    ui.topDisplay:cecho("&lt;DarkSeaGreen&gt;Crowdmap Version&lt;white&gt;: ")
+    ui.topDisplay:cechoLink("&lt;SkyBlue&gt;&lt;u&gt;"..ui.crowdmapVersion.."&lt;/u&gt;", [[mmp.showcrowdchangelog()]],"Show the crowdmap changelog",true)
+  end
+  
+  
+  if gmcp.Game and gmcp.Game.Info then
+    -- Get the time difference
+    local timeElapsed = ui.getTimeElapsed(gmcp.Game.Info.logintime)
+
+    -- Display the result
+    ui.topDisplay:echo("  ")
+    ui.topDisplay:cecho("&lt;DarkSeaGreen&gt;Connection Time&lt;white&gt;: &lt;SkyBlue&gt;"..timeElapsed)
+  end
+
+
+end</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        
+      </ScriptGroup>
+      <ScriptGroup isActive="yes" isFolder="yes">
+          
+        <name>Informational</name>
+        <script/>
+          
+        <packageName/>
+        
+        <eventHandlerList>
+</eventHandlerList>
+        <ScriptGroup isActive="yes" isFolder="yes">
+            
+          <name>Walking</name>
+          <script/>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          <ScriptGroup isActive="yes" isFolder="yes">
+              
+            <name>Room Checker</name>
+            <script/>
+              
+            <packageName/>
+            
+            <eventHandlerList>
+</eventHandlerList>
+            <Script isActive="yes" isFolder="no">
+                
+              <name>Identify Visited Rooms</name>
+              <script>ui.knownRooms = ui.knownRooms or {}
+
+function ui.checkRooms()
+if not gmcp.Room.Info then return end
+if not getRoomArea(gmcp.Room.Info.num) then return end
+
+local questNum
+local shopName
+local shopExists
+local area = getRoomAreaName(getRoomArea(gmcp.Room.Info.num))
+
+  
+  if gmcp.Room.Info.quest ~= 0 then
+    questNum = gmcp.Room.Info.quest
+    else
+    questNum = false
+  end
+
+  if gmcp.Room.Info.shop ~= "" then
+    shopName = gmcp.Room.Info.shop
+    shopExists = true
+    else
+    shopName = ""
+    shopExists = false
+  end
+  
+  ui.unHighLightRooms(gmcp.Room.Info.num)
+  
+  ui.knownRooms[gmcp.Room.Info.num] = ui.knownRooms[gmcp.Room.Info.num] or {}
+  
+  ui.knownRooms[gmcp.Room.Info.num].area = area
+  ui.knownRooms[gmcp.Room.Info.num].quest = questNum
+  ui.knownRooms[gmcp.Room.Info.num].shop = shopExists
+  ui.knownRooms[gmcp.Room.Info.num].shopName = shopName
+    
+  if table.size(gmcp.Room.Contents) &gt; 0 then
+    ui.knownRooms[gmcp.Room.Info.num].contents = ui.knownRooms[gmcp.Room.Info.num].contents or {}
+    for index,content in pairs(gmcp.Room.Contents) do
+      if not table.contains(ui.knownRooms[gmcp.Room.Info.num], gmcp.Room.Contents[index].name) then
+      table.insert(ui.knownRooms[gmcp.Room.Info.num].contents, gmcp.Room.Contents[index].name)
+      end
+    end
+  end
+--
+end
+
+--registerNamedEventHandler("ui","checkVisitedRooms","gmcp.Room.Info",
+--  function()
+--    ui.checkRooms("walking")
+--  end
+--)
+
+
+function ui.clearVisitedRooms()
+  for k,_ in pairs(ui.knownRooms) do
+    if getRoomChar(k) == "X" then
+      echo("Room: "..k.." Char: "..getRoomChar(k).."\n")
+      setRoomChar(k,ui.knownRooms[k].roomCharBackup)
+      centerview(mmp.currentroom)
+    end
+  end
+
+
+end</script>
+                
+              <packageName/>
+              
+              <eventHandlerList>
+</eventHandlerList>
+              
+            </Script>
+            <Script isActive="yes" isFolder="no">
+                
+              <name>Show unvisited roms in area</name>
+              <script>function ui.showUnvisitedRooms(area)
+  local roomTable = getAreaRooms(area)
+  cecho("\nArea name: &lt;lime_green&gt;"..getRoomAreaName(area).."\n\n")
+  cecho("&lt;cyan&gt;[   id]                Distance:     Name:\n")
+  table.sort(roomTable)
+  table.sort(ui.knownRooms)
+  for k,v in spairs(roomTable) do
+    local roomId = v
+    if not ui.knownRooms[roomId] then
+      --local x, distance = getPath(getPlayerRoom(),roomId)
+      local roomName
+      if getRoomName(roomId) == "" then roomName = "Unknown name..." else roomName = getRoomName(roomId) end
+      
+    
+    cecho("&lt;DarkSeaGreen&gt;[&lt;yellow&gt;"..string.format("%5s", roomId).."&lt;DarkSeaGreen&gt;]")
+    --cechoLink("  &lt;u&gt;Walk to Room&lt;/u&gt;  ", [[mmp.gotoRoom(]]..roomId..[[)]], "Walk to room #"..roomId.." - "..roomName, true)
+    --cecho("&lt;white&gt;(&lt;gold&gt;"..string.format("%3s", distance).."&lt;white&gt;)&lt;grey&gt; steps")
+    cecho(" - &lt;dark_green&gt;"..roomName.."\n")
+    else
+    cecho("\n&lt;grey&gt;Nothing to show. All known rooms visited.")
+    return
+    end
+  end
+  cecho("\n\n&lt;lime_green&gt;Click here to ")
+  cechoLink("&lt;firebrick&gt;hightlight ", [[ui.highlightUnvisitedRooms(]]..area..[[)]], "", true)
+  cecho("&lt;lime_green&gt;or ")
+  cechoLink("&lt;light_blue&gt;unhighlight ", [[ui.highlightUnvisitedRooms(]]..area..[[,"unhighlight")]], "", true)
+  cecho("&lt;lime_green&gt;unvisited rooms.")
+  
+end</script>
+                
+              <packageName/>
+              
+              <eventHandlerList>
+</eventHandlerList>
+              
+            </Script>
+            <Script isActive="yes" isFolder="no">
+                
+              <name>Highlight unvisited roms in area</name>
+              <script>function ui.highlightUnvisitedRooms(area, var)
+  
+  local r,g,b = unpack(color_table.red)
+  local br,bg,bb = unpack(color_table.black)
+  local area
+  
+  if not area or area == "" then
+    area = getRoomArea(gmcp.Room.Info.num)
+  end
+  
+  local roomTable = getAreaRooms(area)
+  
+  for k,v in ipairs(roomTable) do
+    local roomId = v
+    if var == "unhighlight" then
+      ui.unHighLightRooms(roomId)
+    elseif
+    not ui.knownRooms[roomId] then
+      ui.highLightRooms(roomId, r, g, b, br, bg, bb)
+    end
+  end
+  
+end
+
+function ui.highLightRooms(room, r, g, b, br, bg, bb)
+  highlightRoom(room, r,g,b,br,bg,bb, 0.8, 255, 0)
+end
+
+function ui.unHighLightRooms(room)
+  unHighlightRoom(room)
+end</script>
+                
+              <packageName/>
+              
+              <eventHandlerList>
+</eventHandlerList>
+              
+            </Script>
+            <Script isActive="yes" isFolder="no">
+                
+              <name>Mark area visited</name>
+              <script>function ui.markAreaVisited(area)
+  local roomTable = getAreaRooms(area)
+  cecho("\n&lt;grey&gt;Area name&lt;white&gt;: &lt;lime_green&gt;"..getRoomAreaName(area).." &lt;grey&gt; now marked as visited.\n\n")
+    
+  for k,v in spairs(roomTable) do
+    local roomId = v
+    
+    local areaSelect = getRoomAreaName(getRoomArea(v))
+    
+    ui.knownRooms[v] = {
+    area = areaSelect,
+    quest = false,
+    shop = false,
+    shopName = false,
+    }
+    
+  end
+ui.showMapExpLevel()
+end</script>
+                
+              <packageName/>
+              
+              <eventHandlerList>
+</eventHandlerList>
+              
+            </Script>
+            <Script isActive="yes" isFolder="no">
+                
+              <name>Mark area not visited</name>
+              <script>function ui.clearAreaVisited(area)
+  local roomTable = getAreaRooms(area)
+  cecho("\n&lt;grey&gt;Area name&lt;white&gt;: &lt;lime_green&gt;"..getRoomAreaName(area).." &lt;grey&gt; now cleared.\n\n")
+    
+  for k,v in spairs(roomTable) do
+    local roomId = v
+    
+    local areaSelect = getRoomAreaName(getRoomArea(v))
+    
+    ui.knownRooms[v] = nil
+    
+  end
+
+ui.showMapExpLevel()  
+end</script>
+                
+              <packageName/>
+              
+              <eventHandlerList>
+</eventHandlerList>
+              
+            </Script>
+            
+          </ScriptGroup>
+          
+        </ScriptGroup>
+        <ScriptGroup isActive="yes" isFolder="yes">
+            
+          <name>Notes</name>
+          <script/>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          <Script isActive="yes" isFolder="no">
+              
+            <name>Save room notes</name>
+            <script>function ui.saveRoomNotes(note)
+  ui.roomNotes = ui.roomNotes or {}
+  
+  if note == "clear" then
+    ui.roomNotes[gmcp.Room.Info.num] = nil
+    cecho("\n&lt;DodgerBlue&gt;Thank you!\n")
+    cecho("\n&lt;DodgerBlue&gt;Room notes saved for room id &lt;green&gt;"..gmcp.Room.Info.num.." &lt;DodgerBlue&gt;have been cleared.\n\n")
+  else
+    ui.roomNotes[gmcp.Room.Info.num] = {notes = note}
+    cecho("\n&lt;DodgerBlue&gt;Thank you!\n")
+    cecho("\n&lt;DodgerBlue&gt;Room notes saved for room id &lt;green&gt;"..gmcp.Room.Info.num.."&lt;white&gt;: &lt;gold&gt;"..ui.roomNotes[gmcp.Room.Info.num].notes.."\n\n")
+ 
+  end
+ 
+  -- Save the notes table so we can use it later
+  table.save(getMudletHomeDir().."/"..ui.packageName.."/ui.roomNotes.lua", ui.roomNotes)
+  
+  -- Once the note is saved, reload the room info
+  ui.updateRoomDisplay()
+
+end</script>
+              
+            <packageName/>
+            
+            <eventHandlerList>
+</eventHandlerList>
+            
+          </Script>
+          
+        </ScriptGroup>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Show map exploration level</name>
+          <script>function ui.showMapExpLevel()
+
+  -- Get the areas in the map
+  local mapTable = getAreaTable()
+  mapTable["Default Area"] = nil
+  mapTable["Underworld"] = nil
+  
+  cecho("\nRoom Name             Visited  Total     % Visited\n")
+  for k,v in spairs(mapTable) do
+    local roomCount = 0
+    -- Count how many rooms we have visited in each area
+    for num,area in pairs(ui.knownRooms) do
+      if ui.knownRooms[num].area == k then
+      roomCount = roomCount + 1
+      end
+    end
+    local areaName = string.format("%-40s", k)
+    local areaRooms = string.format("%4s", table.size(getAreaRooms(v)))
+    local visitedRooms = string.format("%4s", roomCount)
+    local visitedPercentage = string.sub(tostring((visitedRooms/areaRooms)*100),1,3)
+    visitedPercentage = string.format("%3s", string.gsub(visitedPercentage, "%D", ""))
+    cechoLink("&lt;dark_green&gt;"..areaName, [[ui.showUnvisitedRooms("]]..v..[[")]], string.trim(areaName).." - show rooms", true)
+    cecho("&lt;lime_green&gt;"..visitedRooms.." &lt;light_blue&gt;/ &lt;gold&gt;"..areaRooms.."   &lt;dodger_blue&gt;"..visitedPercentage.." &lt;grey&gt;%")
+    cechoPopup("&lt;DimGray&gt;  (Mark all)\n", {[[ui.markAreaVisited("]]..v..[[")]],[[ui.clearAreaVisited("]]..v..[[")]]}, {string.trim(areaName).." - mark area visited",string.trim(areaName).." - mark area not visited"}, true)
+    
+  end
+
+  if getRoomArea(gmcp.Room.Info.num) then 
+    cecho("\n\n&lt;lime_green&gt;Click here to ")
+    cechoLink("&lt;firebrick&gt;highlight ", [[ui.highlightUnvisitedRooms(]]..getRoomArea(gmcp.Room.Info.num)..[[)]], "", true)
+    cecho("&lt;lime_green&gt;or ")
+    cechoLink("&lt;light_blue&gt;unhighlight ", [[ui.highlightUnvisitedRooms(]]..getRoomArea(gmcp.Room.Info.num)..[[,"unhighlight")]], "", true)
+    cecho("&lt;lime_green&gt;unvisited rooms in &lt;cyan&gt;current area")
+    cecho("\n&lt;lime_green&gt;or click an &lt;cyan&gt;area name&lt;lime_green&gt; to show unvisited rooms.\n\n")
+  else
+      cecho("\n&lt;lime_green&gt;Click an &lt;cyan&gt;area&lt;lime_green&gt; name to show unvisited rooms.\n\n")
+  end
+
+table.save(getMudletHomeDir().."/"..ui.packageName.."/ui.knownRooms.lua", ui.knownRooms)
+end
+</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        <ScriptGroup isActive="yes" isFolder="yes">
+            
+          <name>Walking/Room Checker</name>
+          <script/>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </ScriptGroup>
+        
+      </ScriptGroup>
+      <ScriptGroup isActive="yes" isFolder="yes">
+          
+        <name>Core Functions</name>
+        <script/>
+          
+        <packageName/>
+        
+        <eventHandlerList>
+</eventHandlerList>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Color Map</name>
+          <script>-- internal sorting function, sorts first by hue, then luminosity, then value
+local sortColorsByHue =
+  function(lhs, rhs)
+    local lh, ll, lv = unpack(lhs.sort)
+    local rh, rl, rv = unpack(rhs.sort)
+    if lh &lt; rh then
+      return true
+    elseif lh &gt; rh then
+      return false
+    elseif ll &lt; rl then
+      return true
+    elseif ll &gt; rl then
+      return false
+    else
+      return lv &lt; rv
+    end
+  end
+-- internal sorting function, removes _ from snake_case and compares to camelCase
+local sortColorsByName =
+  function(a, b)
+    local aname = string.gsub(string.lower(a.name), "_", "")
+    local bname = string.gsub(string.lower(b.name), "_", "")
+    return aname &lt; bname
+  end
+-- internal function used to turn sorted colors table into columns
+local chunkify =
+  function(tbl, num_chunks)
+    local pop =
+      function(t)
+        return table.remove(t, 1)
+      end
+    local tbl = table.deepcopy(tbl)
+    local tblsize = #tbl
+    local base_chunk_size = tblsize / num_chunks
+    local chunky_chunks = tblsize % num_chunks
+    local chunks = {}
+    for i = 1, num_chunks do
+      local chunk_size = base_chunk_size
+      if i &lt;= chunky_chunks then
+        chunk_size = chunk_size + 1
+      end
+      local chunk = {}
+      for j = 1, chunk_size do
+        chunk[j] = pop(tbl)
+      end
+      chunks[i] = chunk
+    end
+    return chunks
+  end
+-- internal function, converts rgb to hsv
+-- found at https://github.com/EmmanuelOga/columns/blob/master/utils/color.lua#L89
+local rgbToHsv =
+  function(r, g, b)
+    r, g, b = r / 255, g / 255, b / 255
+    local max, min = math.max(r, g, b), math.min(r, g, b)
+    local h, s, v
+    v = max
+    local d = max - min
+    if max == 0 then
+      s = 0
+    else
+      s = d / max
+    end
+    if max == min then
+      h = 0
+      -- achromatic
+    else
+      if max == r then
+        h = (g - b) / d
+        if g &lt; b then
+          h = h + 6
+        end
+      elseif max == g then
+        h = (b - r) / d + 2
+      elseif max == b then
+        h = (r - g) / d + 4
+      end
+      h = h / 6
+    end
+    return h, s, v
+  end
+-- internal stepping function, removes some of the noise for a more pleasing sort
+-- cribbed from the python on https://www.alanzucconi.com/2015/09/30/colour-sorting/
+local step =
+  function(r, g, b)
+    local lum = math.sqrt(.241 * r + .691 * g + .068 * b)
+    local reps = 8
+    local h, s, v = rgbToHsv(r, g, b)
+    local h2 = math.floor(h * reps)
+    local lum2 = math.floor(lum * reps)
+    local v2 = math.floor(v * reps)
+    if h2 % 2 == 1 then
+      v2 = reps - v2
+      lum2 = reps - lum2
+    end
+    return h2, lum2, v2
+  end
+
+local function calc_luminosity(r, g, b)
+  r = r &lt; 11 and r / (255 * 12.92) or ((0.055 + r / 255) / 1.055) ^ 2.4
+  g = g &lt; 11 and g / (255 * 12.92) or ((0.055 + g / 255) / 1.055) ^ 2.4
+  b = b &lt; 11 and b / (255 * 12.92) or ((0.055 + b / 255) / 1.055) ^ 2.4
+  return (0.2126 * r) + (0.7152 * g) + (0.0722 * b)
+end
+
+local function include(color, options)
+  if options.removeDupes then
+    if string.find(color, "_") or string.find(color:lower(), 'gray') or string.find(color:lower(), 'ansi') then
+      return false
+    else
+      return true
+    end
+  else
+    if string.find(color, "ansi_%d%d%d") then
+      return false
+    else
+      return true
+    end
+  end
+end
+
+local function echoColor(color, options)
+  local rgb = color.rgb
+  local fgc = "white"
+  if calc_luminosity(unpack(rgb)) &gt; 0.5 then
+    fgc = "black"
+  end
+  local colorString
+  if options.justText then
+    colorString = string.format('&lt;%s:%s&gt; %-23s&lt;reset&gt; ', color.name, 'black', color.name, spacer)
+  else
+    colorString = string.format('&lt;%s:%s&gt; %-23s&lt;reset&gt; ', fgc, color.name, color.name)
+  end
+  if options.window == "main" then
+    if options.echoOnly then
+      cecho(colorString)
+    else
+      cechoLink(
+        colorString,
+        function() ui.settings[options.uiSetting] = color.name ui.addCSSToSettings() ui.createContainers() end,
+        table.concat(rgb, ", "),
+        true
+      )
+      
+    end
+  else
+   if options.echoOnly then
+      cecho(options.window, colorString)
+    else
+      cechoLink(
+        options.window,
+        colorString,
+        function() ui.settings[options.uiSetting] = color.name ui.addCSSToSettings() ui.createContainers() end,
+        table.concat(rgb, ", "),
+        true
+      )
+      
+    end
+  end
+end
+
+function displayColors(options)
+  local options = options or {}
+  local optionsType = type(options)
+  assert(
+    optionsType == "table",
+    "displayColors(options) argument error: options as table expects, got " .. optionsType
+  )
+  options.cols = options.cols or 4
+  options.search = options.search or ""
+  options.sort = options.sort or false
+  if options.removeDupes == nil then
+    options.removeDupes = true
+  end
+  if options.columnSort == nil then
+    options.columnSort = true
+  end
+  if type(options.window) == "table" then
+    options.window = options.window.name
+  end
+  options.window = options.window or "main"
+  local color_table = options.color_table or color_table
+  local cols, search, sort = options.cols, options.search, options.sort
+  local colors = {}
+  for k, v in pairs(color_table) do
+    local color = {}
+    color.rgb = v
+    color.name = k
+    color.sort = {step(unpack(v))}
+    if include(k, options) and k:lower():find(search) then
+      table.insert(colors, color)
+    end
+  end
+  if sort then
+    table.sort(colors, sortColorsByName)
+  else
+    table.sort(colors, sortColorsByHue)
+  end
+  if options.columnSort then
+    local columns_table = chunkify(colors, cols)
+    local lines = #columns_table[1]
+    for i = 1, lines do
+      for j = 1, cols do
+        local color = columns_table[j][i]
+        if color then
+          echoColor(color, options)
+        end
+      end
+      echo(options.window, "\n")
+    end
+  else
+    local i = 1
+    for _, k in ipairs(colors) do
+      echoColor(k,options)
+      if i == cols then
+        echo(options.window, "\n")
+        i = 1
+      else
+        i = i + 1
+      end
+    end
+    if i ~= 1 then
+      echo(options.window, "\n")
+    end
+  end
+end</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Utility Functions</name>
+          <script>function ui.displayUIMessage(message)
+  if not message then return end
+  cecho("\n&lt;green&gt;### &lt;gold&gt;GoMud UI &lt;white&gt;: &lt;grey&gt;"..message)
+end
+
+function ui.resizeEvent(event, x, y)
+  if not ui.mainWindowWidth then return end
+  local fontWidth, fontHeight = calcFontSize(getFontSize("main"), getFont(main))
+  if ui.left then 
+    ui.mainWindowWidth = select(1,getMainWindowSize())-ui.left:get_width()-ui.right:get_width()
+    local windowWrap = math.floor(ui.mainWindowWidth/fontWidth)
+    setWindowWrap("main", windowWrap-5)
+  end
+  --echo("RESIZE EVENT: event="..event.." x="..x.." y="..y.."\n")
+end
+
+function ui.cleanNumbers(v)
+  if not v then return "0" end
+  local separator = ui.settings.numberSystem == "eu" and "." or ","
+  return string.gsub(v, separator, "")
+end
+
+function ui.addNumberSeparator(v)
+  if not v then return "0" end
+  local s = string.format("%d", math.floor(v))
+  local pos = string.len(s) % 3
+  if pos == 0 then pos = 3 end
+  local separator = ui.settings.numberSystem == "eu" and "." or ","
+  return string.sub(s, 1, pos) .. string.gsub(string.sub(s, pos+1), "(...)", separator.."%1")
+end
+
+function ui.fixName(s)
+  if not s then return "" end
+  return string.lower(string.gsub(s, "[ ,'\"]", "_"))
+end
+
+function ui.padAndTruncate(str, width)
+  if not str then return string.rep(" ", width or 2) end
+  width = width or 2
+  return string.format("%"..width.."s", string.sub(str, 1, width))
+end
+
+function ui.titleCase(str)
+  if not str then return "" end
+  local buf = {}
+  for word in string.gmatch(str, "%S+") do
+    local first, rest = string.sub(word, 1, 1), string.sub(word, 2)
+    table.insert(buf, string.upper(first) .. string.lower(rest))
+  end
+  return table.concat(buf, " ")
+end
+
+function ui.easyMapperStart()
+  if not gmcp.Room or not gmcp.Room.Info then return end
+  mmp.game = "gomud"
+  local areaName = ui.titleCase(string.gsub(gmcp.Room.Info.area or "", "_"," " ))
+  local roomNum = gmcp.Room.Info.num or "0"
+  expandAlias("mc on")
+  expandAlias("rlc v"..roomNum.." 0 0 0")
+  expandAlias("area add "..areaName)
+  expandAlias("room area "..areaName)
+end
+
+function ui.showDebug()
+  echo("\n")
+  echo("Mudlet version: "..getMudletVersion("string"))
+  echo("\n")
+  echo("OS: "..ui.OSType.." Version: "..ui.OSVersion)
+  local mainw, mainh = getMainWindowSize()
+  echo("\n")
+  echo("Window dimensions: "..mainw.."*"..mainh)
+  echo("\n")
+  local hasFont = getAvailableFonts()["JetBrains Mono NL"]
+  if hasFont then
+    echo("Font JetBrains Mono NL is available")
+  else
+    echo("Font JetBrains Mono NL is NOT available - using the "..getFont())
+  end
+  echo("\n")
+  echo("Main font size: "..getFontSize("main"))
+  echo("\n")
+  local mainFontWidth, mainFontHeight = calcFontSize(getFontSize("main"), getFont(main))
+  echo("Main font dimension: "..mainFontWidth.."*"..mainFontHeight)
+  echo("\n")
+  echo("Main console pixel width: "..ui.mainWindowWidth)
+  echo("\n")
+  echo("Main console char width: "..ui.mainWindowWidth/mainFontWidth)
+  echo("\n")
+  echo("Main console wrap: "..getWindowWrap("main"))
+  echo("\n")
+  echo("Left border: "..getBorderLeft().." - Right border: ".. getBorderRight().." - Top border: "..getBorderTop().." - Bottom Border: "..getBorderBottom())
+  echo("\n")
+  echo("Packages installed: ")
+  echo("\n")
+  for _,v in pairs(getPackages()) do echo(v.." ") end
+  echo("\n")
+end
+
+function ui.mapDownloaded()
+  if not gmcp.Room or not gmcp.Room.Info then return end
+  if not centerview(gmcp.Room.Info.num) then
+    ui.displayUIMessage("Sorry, you are in room "..gmcp.Room.Info.num.." which is not on the map so we cannot place you there.\n")
+  end
+end
+
+function ui.split_version(version)
+  if not version then return {} end
+  local t = {}
+  for num in string.gmatch(version, "%d+") do
+    table.insert(t, tonumber(num))
+  end
+  return t
+end
+
+function ui.compare_versions(v1, v2)
+  if not v1 or not v2 then return false end
+  local version1 = ui.split_version(v1)
+  local version2 = ui.split_version(v2)
+  
+  for i = 1, math.max(#version1, #version2) do
+    local part1 = version1[i] or 0
+    local part2 = version2[i] or 0
+    
+    if part1 &gt; part2 then
+      return true
+    elseif part1 &lt; part2 then
+      return false  
+    end
+  end
+  
+  return false
+end
+
+function ui.versions_behind(old_version, new_version)
+  if not old_version or not new_version then return 0 end
+  local old = ui.split_version(old_version)
+  local new = ui.split_version(new_version)
+  
+  local difference = 0
+  
+  for i = 1, math.max(#old, #new) do
+    local part_old = old[i] or 0
+    local part_new = new[i] or 0
+    
+    if part_old &gt; part_new then
+      difference = difference + (part_old - part_new)
+    end
+  end
+  
+  return difference
+end
+
+function ui.parseTimestamp(timestamp)
+  if not timestamp then return nil end
+  local _, year, month, day, hour, min, sec = timestamp:match("(%w+), (%d+)-(%d+)-(%d+) (%d+):(%d+):(%d+)")
+  
+  if not year or not month or not day or not hour or not min or not sec then
+    return nil
+  end
+  
+  year, month, day = tonumber(year), tonumber(month), tonumber(day)
+  hour, min, sec = tonumber(hour), tonumber(min), tonumber(sec)
+  
+  return {
+    year = year,
+    month = month,
+    day = day,
+    hour = hour,
+    min = min,
+    sec = sec
+  }
+end
+
+function ui.getTimeElapsed(loginTimestamp)
+  if not loginTimestamp then return "00H 00M 00S" end
+  local loginTime = ui.parseTimestamp(loginTimestamp)
+  if not loginTime then return "00H 00M 00S" end
+  local loginUnix = os.time(loginTime)
+  local currentUnix = os.time()
+  local diffSeconds = currentUnix - loginUnix
+  local hours = math.floor(diffSeconds / 3600)
+  local minutes = math.floor((diffSeconds % 3600) / 60)
+  local seconds = diffSeconds % 60
+  return string.format("&lt;gold&gt;%02d&lt;white&gt;h &lt;gold&gt;%02d&lt;white&gt;m &lt;gold&gt;%02d&lt;white&gt;s", hours, minutes, seconds)
+end</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Autoupdater</name>
+          <script>ui = ui or {}
+ui.packageName = "GoMudUI"
+
+ui.downloadFolder = getMudletHomeDir().."/"..ui.packageName.."/ui_updater/"
+-- Install the new UI
+function ui.installGoMudUI()
+  
+    ui.displayUIMessage("Now installing version &lt;sky_blue&gt;"..ui.versionNew.."&lt;reset&gt; of GoMud UI")
+  
+    ui.isUpdating = true
+    uninstallPackage("GoMudUI")
+    ui.postInstallDone = false
+    ui.firstRun = true
+    installPackage("https://github.com/MorquinDevlar/GoMudUI/releases/latest/download/GoMudUI.mpackage")
+end
+
+
+-- This function is running on a timer and also every time the client starts.
+function ui.checkForUpdate()
+  if not lfs.attributes(ui.downloadFolder) then
+      if lfs and lfs.mkdir then
+        local t, s = lfs.mkdir(ui.downloadFolder)
+        if not t and s ~= "File exists" then
+          echo("Could not make the '" .. ui.downloadFolder .. "' folder; " .. s)
+          return
+        end
+      else
+        echo(
+          "Sorry, but you need LuaFileSystem (lfs) installed, or have the '" ..
+          ui.downloadFolder ..
+          "' folder exist."
+        )
+        return
+      end
+  end
+  ui.gomudUIVersionFile = ui.downloadFolder .. "version"
+  downloadFile(ui.gomudUIVersionFile, "https://github.com/MorquinDevlar/GoMudUI/releases/latest/download/version.txt")
+end
+
+-- Fetch the changelog is the UI package was updated
+function ui.fetchChangeLog()
+  ui.gomudUIChangelogFile = ui.downloadFolder .. "changelog"
+  downloadFile(ui.gomudUIChangelogFile, "https://github.com/MorquinDevlar/GoMudUI/releases/latest/download/changelog.txt")
+end
+
+function ui.fileDownloadedSuccess(_, filename)
+       
+  if not io.exists(filename) then return end
+  
+  -- Show the version and let the user know if they are behind
+  if filename == tostring(ui.gomudUIVersionFile) then
+    --ui.displayUIMessage("File downloaded: "..filename)
+    local file, content = io.open(filename)
+    if file then content = file:read("*l"):trim(); io.close(file) end
+    
+    if ui.compare_versions(content, ui.version) then
+      ui.versionNew = content
+      ui.versionBehind = ui.versions_behind(ui.versionNew, ui.version)
+      
+      ui.displayUIMessage("&lt;magenta&gt;Update found: &lt;sky_blue&gt;"..ui.version.."&lt;reset&gt; -&gt; &lt;spring_green&gt;"..ui.versionNew)
+      ui.displayUIMessage("You are &lt;orange&gt;"..ui.versionBehind.."&lt;reset&gt; version(s) behind")
+      ui.fetchChangeLog()
+      ui.displayUIMessage("Use the in game command &lt;ui install&gt; to update")
+    elseif ui.manualUpdate then
+      ui.displayUIMessage("\n&lt;magenta&gt;No update found. You are on version: &lt;sky_blue&gt;"..ui.version.."\n")
+      ui.manualUpdate = false
+    end
+    
+  end
+  
+  -- If the changelog was downloaded, show what was changed
+  if filename == tostring(ui.gomudUIChangelogFile) then
+    --ui.displayUIMessage("File downloaded: "..filename)
+    local file, content = io.open(filename)
+    if file then content = file:read("*a"); io.close(file) end
+      
+    -- Shamelessly stolen from the IRE mapper package
+    
+    -- make environment
+    local env = {} -- add functions you know are safe here
+    -- run code under environment [Lua 5.1]
+    local function run(untrusted_code)
+      if untrusted_code:byte(1) == 27 then return nil, "binary bytecode prohibited" end
+      local untrusted_function, message = loadstring(untrusted_code)
+      if not untrusted_function then return nil, message end
+      setfenv(untrusted_function, env)
+      return pcall(untrusted_function)
+    end
+    run(content)
+    -- Stealing from IRE over :)
+    
+    ui.gomudUIChangelog = env.changelog
+    ui.displayUIMessage("&lt;grey&gt;Lastes GoMud UI update:&lt;DarkSeaGreen&gt;")
+    cechoLink(" &lt;dodger_blue&gt;&lt;u&gt;Show the full changelog&lt;/u&gt;", [[ui.gomudUIShowFullChangelog()]], "Click to see the full changelog", true)
+    cecho("&lt;DarkSeaGreen&gt; \n\n"..ui.gomudUIChangelog[#ui.gomudUIChangelog])
+    cechoLink("\n\n&lt;green&gt;### &lt;gold&gt;GoMud UI &lt;white&gt;: &lt;dodger_blue&gt;&lt;u&gt;Click here to update to the latest version!&lt;/u&gt;\n", [[ui.installGoMudUI()]], "Install new version of GoMud UI", true)
+    ui.displayUIMessage("Or use the command &lt;green&gt;ui update ui&lt;grey&gt; to update.")
+  end
+
+  if filename == tostring(ui.gomudMapFile) then
+    ui.displayUIMessage("Map downloaded, now loading")
+    loadMap(getMudletHomeDir().."gomud.dat")
+    ui.displayUIMessage("Map loaded")
+  end
+end
+
+function ui.gomudUIShowFullChangelog()
+  for k, v in ipairs(ui.gomudUIChangelog) do
+    cecho(string.format("  %s) %s\n", k, v:gsub("\t", "     ")))
+  end
+end
+
+function ui.fileDownloadedError(...)
+  debugc{...}
+end</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        <Script isActive="yes" isFolder="no">
+            
+          <name>Settings Handler</name>
+          <script>function ui.settingsHandler(key, arg)
+  ui.settings.userToggles[key][arg].state = not ui.settings.userToggles[key][arg].state
+  if ui.settings.userToggles[key][arg].state then
+    ui.displayUIMessage(ui.settings.userToggles[key][arg].desc.."  &lt;green&gt;ON")
+    if arg == "numpadWalking" then enableKey("Numpad Walking") end
+  else
+    ui.displayUIMessage(ui.settings.userToggles[key][arg].desc.."  &lt;red&gt;OFF")
+    if arg == "numpadWalking" then disableKey("Numpad Walking") end
+  end
+  
+  table.save(getMudletHomeDir().."/"..ui.packageName.."/ui.settings.lua", ui.settings)
+  ui.showSettings(_,_,_,"Settings")
+end
+
+function ui.showSettings(event, display, tabOld, tabNew)
+  if not ui.mapperDisplay then return end
+  if tabNew == "Settings" then
+    local setKeys = table.keys(ui.settings.userToggles)    
+    --display(setKeys)
+    -- Make sure the Settings container is empty before we write to it
+    ui.mapperDisplay:clear("Settings")
+        
+    ui.mapperDisplay:cecho("Settings","\nClick on a setting name to toggle it\n")
+    
+    for _,key in pairs(setKeys) do
+      ui.mapperDisplay:cecho("Settings","\n&lt;gold&gt;"..ui.titleCase(key).."&lt;white&gt;:\n")
+      for k,v in pairs(ui.settings.userToggles[key]) do
+        ui.mapperDisplay:cecho("Settings","&lt;white&gt;[")
+        if ui.settings.userToggles[key][k].state then
+          ui.mapperDisplay:cecho("Settings","&lt;green&gt;On ")
+        else
+          ui.mapperDisplay:cecho("Settings","&lt;red&gt;Off")
+        end
+        ui.mapperDisplay:cechoLink("Settings","&lt;white&gt;] "..ui.settings.userToggles[key][k].desc.."\n", [[ui.settingsHandler("]]..key..[[","]]..k..[[")]], ui.settings.userToggles[key][k].desc, true)
+      end
+    end
+  end
+end</script>
+            
+          <packageName/>
+          
+          <eventHandlerList>
+</eventHandlerList>
+          
+        </Script>
+        
+      </ScriptGroup>
+      <Script isActive="yes" isFolder="no">
+          
+        <name>Event handlers</name>
+        <script>ui = ui or {}
+ui.events = ui.events or {}
+
+-------------[ Set all the events for updating the player information ]-------------
+
+function ui.defineEventHandlers()
+  for k,v in pairs(ui.events.gmcpevents) do
+    local functionRef
+    for i,functionRef in pairs(v) do
+      registerNamedEventHandler("ui", k.."-"..functionRef, k, functionRef)
+    end
+  end
+end
+
+function ui.killEventHandlers()
+  for k,v in pairs(ui.events.gmcpevents) do
+    local functionRef
+    for i,functionRef in pairs(v) do
+      deleteNamedEventHandler("ui", k.."-"..functionRef)
+    end
+  end
+end</script>
+          
+        <packageName/>
+        
+        <eventHandlerList>
+</eventHandlerList>
+        
+      </Script>
+      <Script isActive="yes" isFolder="no">
+          
+        <name>UI Settings</name>
+        <script>ui = ui or {}
+ui.events = ui.events or {}
+
+ui.roomNotes = ui.roomNotes or {}
+ui.knownRooms = ui.knownRooms or {}
+
+ui.settings = ui.settings or {}
+
+ui.version = "1.0.3"
+ui.packageName = "GoMudUI"
+
+ui.OSType, ui.OSVersion = getOS()
+
+-------------[ Check if the generic_mapper package is installed and if so uninstall it ]-------------
+if table.contains(getPackages(),"generic_mapper") then
+  tempTimer(1, function() uninstallPackage("generic_mapper") end)
+end
+
+-------------[ Add requred external packages ]-------------
+EMCO = require("GoMudUI.emco")
+fText = require("GoMudUI.ftext")
+TableMaker = require("GoMudUI.ftext").TableMaker
+DemonTools = require("GoMudUI.demontools")
+
+
+-------------[ Define the event handlers we need for the UI ]-------------
+ui.events.gmcpevents = {
+sysInstallPackage = {"ui.postInstallHandling"},
+sysUninstall = {"ui.unInstall"},
+sysConnectionEvent = {"ui.connected"},
+sysLoadEvent = {"ui.profileLoaded"},
+UICreated = {"ui.updateDisplays"},
+sysDownloadDone = {"ui.fileDownloadedSuccess"},
+sysDownloadError = {"ui.fileDownloadedError"},
+AdjustableContainerRepositionFinish = {"ui.updateDisplays"},
+sysWindowResizeEvent = {"ui.resizeEvent"},
+sysMapDownloadEvent = {"ui.mapDownloaded"},
+["EMCO tab change"] = {"ui.showSettings"},
+["gmcp.Char.Vitals"] = {"ui.updatePlayerGauges", "ui.updatePromptDisplay"},
+["gmcp.Char.Balance"] = {"ui.updateBalanceGauge"},
+["gmcp.Char.Enemies"] = {"ui.updateEnemyGauge"},
+["gmcp.Char.Affects"] = {"ui.updateAffectsDisplay"},
+["gmcp.Char.Worth"] = {"ui.updatePromptDisplay", "ui.updateCharDisplay"},
+["gmcp.Char"] = {"ui.updateDisplays","ui.updateCharDisplay", "ui.updateAffectsDisplay", "ui.updatePromptDisplay","ui.updateTopBar"},
+["gmcp.Char.Inventory"] = {"ui.updateEQDisplay", "ui.updatePromptDisplay", "ui.updateInvDisplay"},
+["gmcp.Room"] = {"ui.updateRoomDisplay"},
+["gmcp.Char.Stats"] = {"ui.updateCharDisplay"},
+["gmcp.Comm.Channel"] = {"ui.updateChannelDisplay"},
+["gmcp.Char.Enemies"] = {"ui.updateCombatDisplay", "ui.updateEnemyGauge"},
+["gmcp.Room.Info"] = {"ui.checkRooms"},
+["mmapper updated map"] = {"ui.updateTopBar"},
+["gmcp.Game.Who"] = {"ui.updateWhoDisplay"},
+["gmcp.Game.Info"] = {"ui.justLoggedIn"},
+}
+-- Run this to define the event handlers above
+ui.defineEventHandlers()
+ 
+function ui.createSettings()
+  -- This needs to be set outside of settings, as it is being used inside it
+  local noborderConsoleCSS = "background-color:rgba(15,15,15,100%);border-bottom: 0px solid rgba(15,15,15,100%);padding-top: 10px;"
+  
+  -------------[ Default variable settings for the UI package ]-------------
+  ui.settings = {
+    
+    -- General UI variables
+    consoleFont = "JetBrains Mono NL",
+    mainFont = "JetBrains Mono NL",
+    altFont = "Bitstream Vera Sans Mono",
+    
+    -- UI tab variables
+    tabBarColor = "&lt;15,15,15&gt;",
+    containerTitleTextColor = "black",
+    activeTabBGColor = "DarkOliveGreen",
+    activeTabFGColor = "white",
+    inactiveTabFGColor = "white",
+    inactiveTabBGColor = "DimGrey",
+    tabHeight = 20,
+    tabGap = 2,
+  
+    -- UI Font and window sizes
+    tabFontSize = 12,
+    consoleFontSize = 11,
+    gaugeFontSize = 12,
+    promptFontSize = 12,
+    mainFontSize = 13,
+    
+    -- UI general color variables
+    consoleBackgroundColor = "&lt;15,15,15&gt;",
+    --consoleCSS = "background-color:rgba(50,50,50,100%);border-top: 2px solid rgba(15,15,15,100%);",
+    leftCSS = "background-color:rgba(15,15,15,100%);border-right: 2px solid rgba(40,40,40,100%);",
+    topCSS = "background-color:rgba(15,15,15,100%);border-bottom: 2px solid rgba(40,40,40,100%);",
+    rightCSS = "background-color:rgba(15,15,15,100%);",
+    bottomCSS = "background-color:rgba(15,15,15,100%);border-top: 2px solid rgba(40,40,40,100%);",
+    moveableConsoleCSS = "background-color:rgba(15,15,15,100%);border-bottom: 2px solid rgba(40,40,40,100%);padding-top: 10px;",
+    
+    -- Define the containers we want to start with
+    containers = {
+      container1 = {  -- Char
+        dest = "left",
+        height = 12,
+        y = 0
+      }, 
+      container2 = {  -- EQ
+        dest = "left",
+        height = 18,
+        y = 12
+      },
+      container3 = {  -- Room
+        dest = "left",
+        height = 15,
+        y = 40,
+        customCSS = "background-color:rgba(15,15,15,100%);border-bottom: 0px solid rgba(15,15,15,100%);padding-top: 10px;"
+      },
+      container4 = {  -- Channel
+        dest = "right",
+        height = "50%",
+        y = 0
+      },
+      container5 = {  -- Guages
+        dest = "bottom",
+        height = "50px",
+        y = "-52px",
+        customCSS = "background-color:rgba(15,15,15,100%);border-bottom: 0px solid rgba(15,15,15,100%);padding-top: 10px;",
+        width = "530px"
+      },
+      container6 = {  -- Promt
+        dest = "bottom",
+        height = 3,
+        y = 0,
+        customCSS = "background-color:rgba(15,15,15,100%);border-bottom: 0px solid rgba(15,15,15,100%);padding-top: 10px;",
+        fs = ""
+      },
+      container7 = {  -- Mapper
+        dest = "right",
+        height = "50%",
+        y = "-50%"
+      },
+      container8 = {  -- Affects
+        dest = "left",
+        height = 10,
+        y = 30
+      },
+      container9 = {  -- Prompt right side
+        dest = "bottom",
+        height = "50px",
+        width = "150px",
+        y = "-52px",
+        customCSS = "background-color:rgba(15,15,15,100%);border-bottom: 0px solid rgba(200,15,15,100%);padding-top: 10px;",
+        x = "540px"
+      },
+      container10 = { -- Top infobar
+        dest = "top",
+        height = 2,
+        y = 0,
+        customCSS = "background-color:rgba(15,15,15,100%);border-bottom: 0px solid rgba(15,15,15,100%);padding-top: 10px;"
+      },
+    },
+    
+    -- Define the displays we need
+    
+    displays = {
+      charDisplay = {dest = "container1", emco = true, tabs = {"Character", "Wholist"}},
+      eqDisplay = {dest = "container2", emco = true, tabs = {"Equipment","Inventory", "Pets"}},
+      roomDisplay = {dest = "container3", emco = true, wrap = true, tabs = {"Room", "Combat"}},
+      channelDisplay = {dest = "container4", emco = true, allTab = true, wrap = true, tabs = {"All", "Chat","Say","Whisper","Shout","Group"}},
+      gaugeDisplay = {dest = "container5"},
+      promptDisplay = {dest = "container6"},
+      mapperDisplay = {dest = "container7", emco = true, mapTab = "Mapper", tabs = {"Mapper", "Settings"}, mapper = true},
+      affectsDisplay = {dest = "container8", emco = true, wrap = true, tabs = {"Affects", "Group"}},
+      promptRightDisplay = {dest = "container9", wrap = true},
+      topDisplay = {dest = "container10"},
+    },
+    
+    -- Define user settings
+    numberSystem = "eu",
+    userToggles = {
+      convinience = {
+        numpadWalking = {
+          desc = "Numberpad walking",
+          state = true
+        }
+      },
+      gagging = {
+        balance = {
+          desc = "Gag Balance Messages",
+          state = false
+        },
+        blank = {
+          desc = "Gag Blank Messages",
+          state = false
+        },
+        prompt = {
+          desc = "Gag prompt",
+          state = false
+        }
+      }
+    }
+    
+  }
+  ui.addCSSToSettings()
+  ui.osChanges()
+  enableKey("Numpad Walking")
+  ui.setFonts()
+  table.save(getMudletHomeDir().."/"..ui.packageName.."/ui.settings.lua", ui.settings)
+end
+
+function ui.addCSSToSettings()
+  -- Define CSS for containers. Has to happen after defining ui.settings as we need values from settings including any custom ones
+  ui.settings.activeTab = f([[color: white; background-color: ]]..ui.settings.activeTabBGColor..[[;border-width: 0px; margin-right: 2px; margin-bottom: 2px;border-style: solid; border-color: black;border-top-left-radius: 10px;border-top-right-radius: 10px;]])
+  ui.settings.inactiveTab = f([[color: white; background-color: ]]..ui.settings.inactiveTabBGColor..[[;border-width: 0px; margin-right: 2px; margin-bottom: 2px;border-style: solid; border-color: black;border-top-left-radius: 10px;border-top-right-radius: 10px;]])
+  ui.settings.cssFont = "font-family: '"..f(ui.settings.consoleFont).."', sans serif;color: white;"
+  ui.settings.containers.container6.fs = ui.settings.promptFontSize
+end
+
+function ui.osChanges()
+  if ui.OSType == "windows" then
+    ui.settings.tabFontSize = 12
+    ui.settings.consoleFontSize = 10
+    ui.settings.gaugeFontSize = 10
+    ui.settings.promptFontSize = 10
+    ui.settings.tabHeight = 25
+  end
+  
+end
+
+function ui.setFonts()
+  setFont("main", ui.settings.mainFont)
+  setFontSize("main", ui.settings.mainFontSize)
+end
+</script>
+          
+        <packageName/>
+        
+        <eventHandlerList>
+</eventHandlerList>
+        
+      </Script>
+      <Script isActive="yes" isFolder="no">
+          
+        <name>Install-Login-Exit</name>
+        <script>ui = ui or {} 
+
+function ui.connected()
+    ui = ui or {} 
+end
+  
+function ui.justLoggedIn()
+  tempTimer(10, [[ ui.checkForUpdate() ]])
+end
+
+function ui.profileLoaded()
+  
+  -------------[ Load any saved tables into the name space ]-------------
+  
+  -- Load saved settings if any
+  if io.exists(getMudletHomeDir().."/"..ui.packageName.."/ui.settings.lua") then
+    table.load(getMudletHomeDir().."/"..ui.packageName.."/ui.settings.lua", ui.settings) -- using / is OK on Windows too.
+    ui.displayUIMessage("Settings Table Loaded")
+    else
+    -- If we don't find any saved settings load the standard settings
+    ui.createSettings()
+  end  
+
+  -- Load the known rooms table
+  if io.exists(getMudletHomeDir().."/"..ui.packageName.."/ui.knownRooms.lua") then
+    table.load(getMudletHomeDir().."/"..ui.packageName.."/ui.knownRooms.lua", ui.knownRooms) -- using / is OK on Windows too.
+    ui.displayUIMessage("Known rooms loaded")
+  end
+    
+  -- Load the rooms notes
+  if io.exists(getMudletHomeDir().."/"..ui.packageName.."/ui.roomNotes.lua") then
+    table.load(getMudletHomeDir().."/"..ui.packageName.."/ui.roomNotes.lua", ui.roomNotes) -- using / is OK on Windows too.
+    ui.displayUIMessage("Room notes loaded")
+  end
+  -- Check if we have a crowd map version downloaded
+  
+  -- Crowmap has been disabled currently.
+  
+  --if io.exists(getMudletHomeDir().."/map downloads/current") then
+  --  ui.crowdmapVersionFile = io.open(getMudletHomeDir().."/map downloads/current",r) -- using / is OK on Windows too.
+  --  ui.crowdmapVersion = ui.crowdmapVersionFile:read("*number")
+  --end
+
+  ui.displayUIMessage("Initializing UI")
+  ui.createContainers("startup")
+  
+  if ui.postInstallDone then
+    expandAlias("ui", false)
+    ui.postInstallDone = false
+  end
+
+end
+
+
+function ui.saveOnExit()
+  ui.displayUIMessage("Saving UI tables")
+  table.save(getMudletHomeDir().."/"..ui.packageName.."/ui.settings.lua", ui.settings)
+  table.save(getMudletHomeDir().."/"..ui.packageName.."/ui.knownRooms.lua", ui.knownRooms)
+  table.save(getMudletHomeDir().."/"..ui.packageName.."/ui.roomNotes.lua", ui.roomNotes)
+end
+
+function ui.postInstallHandling(_, package)
+
+  if package == "mudlet-mapper" then
+    mmp = mmp or {}
+    raiseEvent("mmp logged in", "gomud")
+    mmp.game = "gomud"
+    mmp.echo("We're connected to GoMud.")
+  end
+  
+  if package == "GoMudUI" then
+    
+    --Check if the generic_mapper package is installed and if so uninstall it
+    if table.contains(getPackages(),"generic_mapper") then
+      ui.displayUIMessage("Now removing standard mapping script")
+      if map.registeredEvents then -- Prevent the generic mapper script from showing confusing information
+        for _,id in ipairs(map.registeredEvents) do
+              killAnonymousEventHandler(id)
+        end
+      end
+      tempTimer(1, function() uninstallPackage("generic_mapper") end)
+    end
+  
+    -- Options for pre-relase versions:
+    if string.find(ui.version, "pre") then
+      ui.displayUIMessage("This is a pre-release version. Version is: "..ui.version)
+      ui.profileLoaded()
+      ui.connected()
+    end
+    --ui.createContainers("startup")
+        
+    -- Check if there is a map loaded already
+    if table.is_empty(getRooms()) then
+      -- there is no map loaded, but if you want a secondary doublecheck
+      if table.size(getAreaTable()) == 1 then
+      -- only has the defaultarea, and no rooms, so there's definitely no map loaded
+      --ui.displayUIMessage("No map loaded")
+      --ui.displayUIMessage("Use 'mconfig crowdmap on' to use the crowd map")
+      -- just download a file and save it in our profile folder
+      end
+    end
+    
+    -- Install IRE mapping script  
+    if not table.contains(getPackages(),"mudlet-mapper") then
+      ui.displayUIMessage("Now installing custom mapper script")
+      --tempTimer(1, function() installPackage("https://github.com/MorquinDevlar/GoMudUI/releases/latest/download/mudlet-mapper.mpackage") end)
+    end
+    
+    ui.postInstallDone = true
+    
+    if not ui.isUpdating then
+      ui.profileLoaded()
+    end
+    ui.updateTopBar()
+  end
+  
+end
+
+function ui.unInstall(_, package)
+  
+  if package == "GoMudUI" and not ui.isUpdating then
+    ui.displayUIMessage("Cleaning up - removing the UI mapper")
+    uninstallPackage("mudlet-mapper")
+    
+    ui.displayUIMessage("Re-installing the generic mapper")
+    if not table.contains(getPackages(),"generic_mapper") then
+      tempTimer(1, function() installPackage("https://raw.githubusercontent.com/Mudlet/Mudlet/development/src/mudlet-lua/lua/generic-mapper/generic_mapper.xml") end)
+    end
+    
+    ui.displayUIMessage("Removing windows and resetting borders")
+    ui.left:hide()
+    ui.right:hide()
+    ui.bottom:hide()
+    ui.top:hide()
+    
+    setBorderBottom(0)
+    setBorderTop(0)
+    setBorderLeft(0)
+    setBorderRight(0)
+    setFont("main", "Bitstream Vera Sans Mono")
+    
+    tempTimer(3, function() resetProfile() end)
+  end
+end</script>
+          
+        <packageName/>
+        
+        <eventHandlerList>
+</eventHandlerList>
+        
+      </Script>
+      
+    </ScriptGroup>
+    
+  </ScriptPackage>
+  <AliasPackage>
+    <AliasGroup isActive="yes" isFolder="yes">
+        
+      <name>GoMudUI</name>
+      <script/>
+        
+      <command/>
+        
+      <packageName/>
+        
+      <regex/>
+      <Alias isActive="yes" isFolder="no">
+          
+        <name>ui main alias</name>
+        <script>local command = string.trim(matches[2])
+
+if command == "" then
+  cecho(
+  [[&lt;sky_blue&gt;
+                        ****    Welcome to the GoMud Mudlet UI    ****
+  
+  &lt;grey&gt;This is a work in progress, developed by Morquin inspired by Durd of Asteria.
+  
+  &lt;yellow&gt;Expect things to break! :)
+  &lt;grey&gt;
+  In the Settings tab, initially found (unless you have moved it) in the lower
+  right corner, next to the Map tab you will find a number of UI settings.
+  
+  &lt;cyan&gt;Commands available now are:
+  
+  &lt;green&gt; ui                        &lt;grey&gt;Show this screen again
+  
+  &lt;green&gt; ui note &lt;note&gt;            &lt;grey&gt;Save a note for a room
+  &lt;green&gt; ui note clear             &lt;grey&gt;Remove a note from a room
+  &lt;green&gt; ui exploration            &lt;grey&gt;Show map exploration
+  
+  &lt;YellowGreen&gt; ui color                  &lt;grey&gt;Change the color of the tabs in the UI
+  
+  &lt;OliveDrab&gt; ui check                  &lt;grey&gt;Manually check for a UI update  
+  &lt;OliveDrab&gt; ui update layout          &lt;grey&gt;Update layout with font or size changes
+  &lt;OliveDrab&gt; ui update ui              &lt;grey&gt;Manually update to newest UI
+  &lt;OliveDrab&gt; ui reset settings         &lt;grey&gt;Clear any custom settings, reverting to default
+  &lt;OliveDrab&gt; ui reset layout           &lt;grey&gt;Reset the UI back to initial layout
+  &lt;OliveDrab&gt; ui containers             &lt;grey&gt;Show and manage all the UI containers
+  &lt;OliveDrab&gt; ui debug                  &lt;grey&gt;Show some UI debug info
+  ]]
+  )
+
+elseif command == "debug" then
+  ui.showDebug()
+
+elseif command == "reset" then
+  if matches[3] == "settings" then
+    ui.createSettings()
+    ui.displayUIMessage("Default settings loaded")
+  elseif matches[3] == "layout" then
+    ui.createContainers("reset")
+    ui.displayUIMessage("Default layout loaded")
+  end
+
+elseif command == "exploration" then
+  ui.showMapExpLevel()
+
+elseif command == "note" then
+  ui.saveRoomNotes(matches[3])
+
+elseif command == "update" then
+  if matches[3] == "layout" then
+    ui.createContainers("layout_update")
+  end
+  if matches[3] == "ui" then
+    ui.installGoMudUI()
+  end
+  
+elseif command == "check" then
+  ui.manualUpdate = true
+  ui.checkForUpdate()
+
+
+elseif command =="color" then
+  cecho("\n &lt;YellowGreen&gt;Choose which item you want to change color on, \n then click on a color name to change to\n\n")
+  echo("\n")
+  cechoLink(" &lt;wheat&gt;Change the: &lt;SteelBlue&gt;&lt;u&gt;Active tab color&lt;/u&gt;", [[displayColors({justText = true, uiSetting = "activeTabBGColor"})]],"Change the Active Tab color", true)
+  echo("\n")
+  cechoLink(" &lt;wheat&gt;Change the: &lt;SteelBlue&gt;&lt;u&gt;Inactive tab color&lt;/u&gt;", [[displayColors({justText = true, uiSetting = "inactiveTabBGColor"})]],"Change the Inctive Tab color", true)
+  echo("\n")
+
+elseif command == "containers" then
+  ui.showContainerState()
+
+else
+  ui.displayUIMessage("Unknown command option &lt;white&gt;"..command.."&lt;reset&gt;")
+end</script>
+          
+        <command/>
+          
+        <packageName/>
+          
+        <regex>^ui\s?(\w+)?\s?(.*)?$</regex>
+        
+      </Alias>
+      
+    </AliasGroup>
+    
+  </AliasPackage>
+  <TimerPackage>
+    <TimerGroup isActive="yes" isFolder="yes" isTempTimer="no" isOffsetTimer="no">
+        
+      <name>GoMudUI</name>
+      <script/>
+        
+      <command/>
+        
+      <packageName/>
+        
+      <time>00:00:00.000</time>
+      <Timer isActive="yes" isFolder="no" isTempTimer="no" isOffsetTimer="no">
+          
+        <name>Check for UI updates</name>
+        <script>ui.checkForUpdate()</script>
+          
+        <command/>
+          
+        <packageName/>
+          
+        <time>01:00:00.000</time>
+        
+      </Timer>
+      <Timer isActive="yes" isFolder="no" isTempTimer="no" isOffsetTimer="no">
+          
+        <name>Update top bar</name>
+        <script>ui.updateTopBar()</script>
+          
+        <command/>
+          
+        <packageName/>
+          
+        <time>00:00:01.000</time>
+        
+      </Timer>
+      
+    </TimerGroup>
+    
+  </TimerPackage>
+  <TriggerPackage>
+    <TriggerGroup isActive="yes" isFolder="yes" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isColorTrigger="" isColorTriggerFg="" isColorTriggerBg="">
+        
+      <name>GoMudUI</name>
+      <script/>
+        
+      <triggerType>0</triggerType>
+        
+      <conditonLineDelta>0</conditonLineDelta>
+        
+      <mStayOpen>0</mStayOpen>
+        
+      <mCommand/>
+        
+      <packageName/>
+        
+      <path>GoMudUI/Initialize UI</path>
+        
+      <mFgColor>#ff0000</mFgColor>
+        
+      <mBgColor>#ffff00</mBgColor>
+        
+      <mSoundFile/>
+        
+      <colorTriggerFgColor>#000000</colorTriggerFgColor>
+        
+      <colorTriggerBgColor>#000000</colorTriggerBgColor>
+      <regexCodeList>
+</regexCodeList>
+      <regexCodePropertyList>
+</regexCodePropertyList>
+      <TriggerGroup isActive="yes" isFolder="yes" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isColorTrigger="" isColorTriggerFg="" isColorTriggerBg="">
+          
+        <name>Initialize UI</name>
+        <script/>
+          
+        <triggerType>0</triggerType>
+          
+        <conditonLineDelta>0</conditonLineDelta>
+          
+        <mStayOpen>0</mStayOpen>
+          
+        <mCommand/>
+          
+        <packageName/>
+          
+        <path>GoMudUI/Initialize UI</path>
+          
+        <mFgColor>#ff0000</mFgColor>
+          
+        <mBgColor>#ffff00</mBgColor>
+          
+        <mSoundFile/>
+          
+        <colorTriggerFgColor>#000000</colorTriggerFgColor>
+          
+        <colorTriggerBgColor>#000000</colorTriggerBgColor>
+        <regexCodeList>
+</regexCodeList>
+        <regexCodePropertyList>
+</regexCodePropertyList>
+        <Trigger isActive="yes" isFolder="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isColorTrigger="" isColorTriggerFg="" isColorTriggerBg="">
+            
+          <name>Show ui command on first run</name>
+          <script>if ui.firstRun then
+    expandAlias("ui", false)
+    ui.firstRun = false
+end</script>
+            
+          <triggerType>0</triggerType>
+            
+          <conditonLineDelta>0</conditonLineDelta>
+            
+          <mStayOpen>0</mStayOpen>
+            
+          <mCommand/>
+            
+          <packageName/>
+            
+          <path>GoMudUI/Initialize UI</path>
+            
+          <mFgColor>#ff0000</mFgColor>
+            
+          <mBgColor>#ffff00</mBgColor>
+            
+          <mSoundFile/>
+            
+          <colorTriggerFgColor>#000000</colorTriggerFgColor>
+            
+          <colorTriggerBgColor>#000000</colorTriggerBgColor>
+          <regexCodeList>
+            
+            <string/>
+          </regexCodeList>
+          <regexCodePropertyList>
+            
+            <integer>7</integer>
+          </regexCodePropertyList>
+          
+        </Trigger>
+        
+      </TriggerGroup>
+      <TriggerGroup isActive="yes" isFolder="yes" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isColorTrigger="" isColorTriggerFg="" isColorTriggerBg="">
+          
+        <name>Main Display Gagging</name>
+        <script/>
+          
+        <triggerType>0</triggerType>
+          
+        <conditonLineDelta>0</conditonLineDelta>
+          
+        <mStayOpen>0</mStayOpen>
+          
+        <mCommand/>
+          
+        <packageName/>
+          
+        <path>GoMudUI/Main Display Gagging</path>
+          
+        <mFgColor>#ff0000</mFgColor>
+          
+        <mBgColor>#ffff00</mBgColor>
+          
+        <mSoundFile/>
+          
+        <colorTriggerFgColor>#000000</colorTriggerFgColor>
+          
+        <colorTriggerBgColor>#000000</colorTriggerBgColor>
+        <regexCodeList>
+</regexCodeList>
+        <regexCodePropertyList>
+</regexCodePropertyList>
+        <Trigger isActive="yes" isFolder="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isColorTrigger="" isColorTriggerFg="" isColorTriggerBg="">
+            
+          <name>Balance Messages</name>
+          <script>if ui.settings.userToggles.gagging.balance.state then
+  deleteLine()
+end</script>
+            
+          <triggerType>0</triggerType>
+            
+          <conditonLineDelta>0</conditonLineDelta>
+            
+          <mStayOpen>0</mStayOpen>
+            
+          <mCommand/>
+            
+          <packageName/>
+            
+          <path>GoMudUI/Main Display Gagging</path>
+            
+          <mFgColor>#ff0000</mFgColor>
+            
+          <mBgColor>#ffff00</mBgColor>
+            
+          <mSoundFile/>
+            
+          <colorTriggerFgColor>#000000</colorTriggerFgColor>
+            
+          <colorTriggerBgColor>#000000</colorTriggerBgColor>
+          <regexCodeList>
+            
+            <string>^\[\d+\] seconds\.\.\.$</string>
+            
+            <string>You are balanced.</string>
+            
+            <string>You are unbalanced. Wait \d\.\d seconds\.\.\.</string>
+            
+            <string>^\[\d+\.?\d+] seconds\.\.\.$</string>
+          </regexCodeList>
+          <regexCodePropertyList>
+            
+            <integer>1</integer>
+            
+            <integer>2</integer>
+            
+            <integer>1</integer>
+            
+            <integer>1</integer>
+          </regexCodePropertyList>
+          
+        </Trigger>
+        <Trigger isActive="yes" isFolder="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isColorTrigger="" isColorTriggerFg="" isColorTriggerBg="">
+            
+          <name>Empty Lines</name>
+          <script>if ui.settings.userToggles.gagging.blank.state then
+  deleteLine()
+end</script>
+            
+          <triggerType>0</triggerType>
+            
+          <conditonLineDelta>0</conditonLineDelta>
+            
+          <mStayOpen>0</mStayOpen>
+            
+          <mCommand/>
+            
+          <packageName/>
+            
+          <path>GoMudUI/Main Display Gagging</path>
+            
+          <mFgColor>#ff0000</mFgColor>
+            
+          <mBgColor>#ffff00</mBgColor>
+            
+          <mSoundFile/>
+            
+          <colorTriggerFgColor>#000000</colorTriggerFgColor>
+            
+          <colorTriggerBgColor>#000000</colorTriggerBgColor>
+          <regexCodeList>
+            
+            <string>^$</string>
+          </regexCodeList>
+          <regexCodePropertyList>
+            
+            <integer>1</integer>
+          </regexCodePropertyList>
+          
+        </Trigger>
+        <Trigger isActive="yes" isFolder="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isColorTrigger="" isColorTriggerFg="" isColorTriggerBg="">
+            
+          <name>Prompt</name>
+          <script>if ui.settings.userToggles.gagging.prompt.state and gmcp.Char then
+  deleteLine()
+end</script>
+            
+          <triggerType>0</triggerType>
+            
+          <conditonLineDelta>0</conditonLineDelta>
+            
+          <mStayOpen>0</mStayOpen>
+            
+          <mCommand/>
+            
+          <packageName/>
+            
+          <path>GoMudUI/Main Display Gagging</path>
+            
+          <mFgColor>#ff0000</mFgColor>
+            
+          <mBgColor>#ffff00</mBgColor>
+            
+          <mSoundFile/>
+            
+          <colorTriggerFgColor>#000000</colorTriggerFgColor>
+            
+          <colorTriggerBgColor>#000000</colorTriggerBgColor>
+          <regexCodeList>
+            
+            <string/>
+          </regexCodeList>
+          <regexCodePropertyList>
+            
+            <integer>7</integer>
+          </regexCodePropertyList>
+          
+        </Trigger>
+        
+      </TriggerGroup>
+      
+    </TriggerGroup>
+    
+  </TriggerPackage>
+  <KeyPackage>
+    <KeyGroup isActive="yes" isFolder="yes">
+        
+      <name>GoMudUI</name>
+        
+      <packageName/>
+      <script/>
+        
+      <command/>
+        
+      <keyCode>33554431</keyCode>
+        
+      <keyModifier>0</keyModifier>
+      <KeyGroup isActive="yes" isFolder="yes">
+          
+        <name>Numpad Walking</name>
+          
+        <packageName/>
+        <script/>
+          
+        <command/>
+          
+        <keyCode>33554431</keyCode>
+          
+        <keyModifier>0</keyModifier>
+        <Key isActive="yes" isFolder="no">
+            
+          <name>Down</name>
+            
+          <packageName/>
+          <script/>
+            
+          <command>down</command>
+            
+          <keyCode>43</keyCode>
+            
+          <keyModifier>536870912</keyModifier>
+          
+        </Key>
+        <Key isActive="yes" isFolder="no">
+            
+          <name>Look</name>
+            
+          <packageName/>
+          <script/>
+            
+          <command>look</command>
+            
+          <keyCode>53</keyCode>
+            
+          <keyModifier>536870912</keyModifier>
+          
+        </Key>
+        <Key isActive="yes" isFolder="no">
+            
+          <name>Up</name>
+            
+          <packageName/>
+          <script/>
+            
+          <command>up</command>
+            
+          <keyCode>45</keyCode>
+            
+          <keyModifier>536870912</keyModifier>
+          
+        </Key>
+        <Key isActive="yes" isFolder="no">
+            
+          <name>NE</name>
+            
+          <packageName/>
+          <script/>
+            
+          <command>ne</command>
+            
+          <keyCode>57</keyCode>
+            
+          <keyModifier>536870912</keyModifier>
+          
+        </Key>
+        <Key isActive="yes" isFolder="no">
+            
+          <name>SE</name>
+            
+          <packageName/>
+          <script/>
+            
+          <command>se</command>
+            
+          <keyCode>51</keyCode>
+            
+          <keyModifier>536870912</keyModifier>
+          
+        </Key>
+        <Key isActive="yes" isFolder="no">
+            
+          <name>NW</name>
+            
+          <packageName/>
+          <script/>
+            
+          <command>nw</command>
+            
+          <keyCode>55</keyCode>
+            
+          <keyModifier>536870912</keyModifier>
+          
+        </Key>
+        <Key isActive="yes" isFolder="no">
+            
+          <name>SW</name>
+            
+          <packageName/>
+          <script/>
+            
+          <command>sw</command>
+            
+          <keyCode>49</keyCode>
+            
+          <keyModifier>536870912</keyModifier>
+          
+        </Key>
+        <Key isActive="yes" isFolder="no">
+            
+          <name>West</name>
+            
+          <packageName/>
+          <script/>
+            
+          <command>w</command>
+            
+          <keyCode>52</keyCode>
+            
+          <keyModifier>536870912</keyModifier>
+          
+        </Key>
+        <Key isActive="yes" isFolder="no">
+            
+          <name>East</name>
+            
+          <packageName/>
+          <script/>
+            
+          <command>e</command>
+            
+          <keyCode>54</keyCode>
+            
+          <keyModifier>536870912</keyModifier>
+          
+        </Key>
+        <Key isActive="yes" isFolder="no">
+            
+          <name>South</name>
+            
+          <packageName/>
+          <script/>
+            
+          <command>s</command>
+            
+          <keyCode>50</keyCode>
+            
+          <keyModifier>536870912</keyModifier>
+          
+        </Key>
+        <Key isActive="yes" isFolder="no">
+            
+          <name>North</name>
+            
+          <packageName/>
+          <script/>
+            
+          <command>n</command>
+            
+          <keyCode>56</keyCode>
+            
+          <keyModifier>536870912</keyModifier>
+          
+        </Key>
+        
+      </KeyGroup>
+      
+    </KeyGroup>
+    
+  </KeyPackage>
+</MudletPackage>

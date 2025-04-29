@@ -1,0 +1,7 @@
+mpackage = [[GoMudUI]]
+author = [[Morquin]]
+icon = [[gomud.png]]
+title = [[gomud.net 33333]]
+description = [[Default UI for GoMud - A MUD engine written in Go]]
+version = [[1]]
+created = [[2025-04-29T08:16:58+0000]]
