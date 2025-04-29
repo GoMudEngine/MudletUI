@@ -101,9 +101,9 @@ function ui.postInstallHandling(_, package)
     end
     
     -- Install IRE mapping script  
-    if not table.contains(getPackages(),"mudlet-mapper") then
-      ui.displayUIMessage("Now installing custom mapper script")
-      --tempTimer(1, function() installPackage("https://github.com/MorquinDevlar/GoMudUI/releases/latest/download/mudlet-mapper.mpackage") end)
+    if not table.contains(getPackages(),"GoMud-Mapper") then
+      ui.displayUIMessage("Now installing custom GoMud mapper script")
+      tempTimer(1, function() installPackage("https://github.com/GoMudEngine/MudletUI/releases/latest/download/GoMud-Mapper.mpackage") end)
     end
     
     ui.postInstallDone = true

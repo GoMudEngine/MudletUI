@@ -11,7 +11,7 @@ function ui.installGoMudUI()
     uninstallPackage("GoMudUI")
     ui.postInstallDone = false
     ui.firstRun = true
-    installPackage("https://github.com/MorquinDevlar/GoMudUI/releases/latest/download/GoMudUI.mpackage")
+    installPackage("https://github.com/GoMudEngine/MudletUI/releases/latest/download/GoMudUI.mpackage")
 end
 
 
@@ -34,13 +34,13 @@ function ui.checkForUpdate()
       end
   end
   ui.gomudUIVersionFile = ui.downloadFolder .. "version"
-  downloadFile(ui.gomudUIVersionFile, "https://github.com/MorquinDevlar/GoMudUI/releases/latest/download/version.txt")
+  downloadFile(ui.gomudUIVersionFile, "https://github.com/GoMudEngine/MudletUI/releases/latest/download/version.txt")
 end
 
 -- Fetch the changelog is the UI package was updated
 function ui.fetchChangeLog()
   ui.gomudUIChangelogFile = ui.downloadFolder .. "changelog"
-  downloadFile(ui.gomudUIChangelogFile, "https://github.com/MorquinDevlar/GoMudUI/releases/latest/download/changelog.txt")
+  downloadFile(ui.gomudUIChangelogFile, "https://github.com/GoMudEngine/MudletUI/releases/latest/download/changelog.txt")
 end
 
 function ui.fileDownloadedSuccess(_, filename)

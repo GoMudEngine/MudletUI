@@ -14,21 +14,26 @@ A modern, feature-rich Mudlet UI package for the Official GoMud engine. This UI 
 ## Installation
 
 ### Option 1: In-Game Installation
-1. Connect to GoMud
+1. Connect to GoMud using Mudlet
 2. Type `install ui` in the game
 3. Follow the on-screen prompts to complete the installation
+4. Optionally reconnect to the game the "kick-start" the gmpc data
 
-### Option 2: Manual Package Installation
-1. Download the latest `.mpackage` file from the [releases page](https://github.com/yourusername/GoMudUI/releases)
+### Option 2: In-Client Installation
+1. Connect to the game or open the profile as "Offline"
+2. Use this command in Mudlet: 'lua installPackage("https://github.com/GoMudEngine/MudletUI/releases/latest/download/GoMudUI.mpackage")'
+3. Optionally reconnect to the game to "kick-start" the gmpc data
+
+### Option 3: Manual Package Installation
+1. Download the latest `.mpackage` file from the [releases page](https://github.com/GoMudEngine/MudletUI/releases/latest/download/GoMudUI.mpackage)
 2. Open Mudlet
 3. Go to Settings → Package Manager
 4. Click "Import" and select the downloaded `.mpackage` file
-5. Restart Mudlet to ensure all components are properly loaded
 
-### Option 3: Building from Source
+### Option 4: Building from Source
 1. Clone or fork the repository:
    ```bash
-   git clone https://github.com/yourusername/GoMudUI.git
+   git clone https://github.com/GoMudEngine/MudletUI.git
    cd GoMudUI
    ```
 2. Install [Muddler](https://github.com/demonnic/muddler) (a build tool for Mudlet packages)
