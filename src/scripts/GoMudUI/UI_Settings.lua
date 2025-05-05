@@ -6,7 +6,7 @@ ui.knownRooms = ui.knownRooms or {}
 
 ui.settings = ui.settings or {}
 
-ui.version = "1.0.3"
+ui.version = "1.0.4"
 ui.packageName = "GoMudUI"
 
 ui.OSType, ui.OSVersion = getOS()
