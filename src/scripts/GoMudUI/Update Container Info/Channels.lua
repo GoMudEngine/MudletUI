@@ -6,7 +6,7 @@ function ui.updateChannelDisplay(eventName, ...)
     
     local senderColor
     
-    if gmcp.Char.Info and gmcp.Comm.Channel.sender == gmcp.Char.Info.name then
+    if gmcp.Char and gmcp.Char.Info and gmcp.Comm.Channel.sender == gmcp.Char.Info.name then
       senderColor = "<gold>"
       else
       senderColor = "<sea_green>"

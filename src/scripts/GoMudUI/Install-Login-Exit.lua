@@ -101,9 +101,9 @@ function ui.postInstallHandling(_, package)
     end
     
     -- Install IRE mapping script  
-    if not table.contains(getPackages(),"GoMud-Mapper") then
+    if not table.contains(getPackages(),"GoMudMapper") then
       ui.displayUIMessage("Now installing custom GoMud mapper script")
-      tempTimer(1, function() installPackage("https://github.com/GoMudEngine/MudletUI/releases/latest/download/GoMud-Mapper.mpackage") end)
+      tempTimer(1, function() installPackage("https://github.com/GoMudEngine/MudletMapper/releases/latest/download/GoMudMapper.mpackage") end)
     end
     
     ui.postInstallDone = true
@@ -114,6 +114,19 @@ function ui.postInstallHandling(_, package)
     ui.updateTopBar()
   end
   
+end
+
+function ui.gameEngineCommand()
+  local command = gmcp.Client.GUI.gomudui
+  echo(command)
+  if command == "update" then
+    ui.manualUpdate = true
+    ui.checkForUpdate()
+  end
+  if command == "remove" then
+    ui.displayUIMessage("Now removing UI package from Mudlet")
+    uninstallPackage("GoMudUI")
+  end
 end
 
 function ui.unInstall(_, package)

@@ -62,7 +62,8 @@ function ui.fileDownloadedSuccess(_, filename)
       ui.fetchChangeLog()
       ui.displayUIMessage("Use the in game command <ui install> to update")
     elseif ui.manualUpdate then
-      ui.displayUIMessage("\n<magenta>No update found. You are on version: <sky_blue>"..ui.version.."\n")
+      echo("\n")
+      ui.displayUIMessage("<magenta>No update found. You are on version: <sky_blue>"..ui.version.."\n")
       ui.manualUpdate = false
     end
     

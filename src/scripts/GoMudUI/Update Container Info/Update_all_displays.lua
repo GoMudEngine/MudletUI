@@ -16,4 +16,5 @@ function ui.updateDisplays(args)
   ui.updateTopBar()
   ui.updateCombatDisplay()
   ui.resizeEvent()
+  raiseWindow("mapper")
 end

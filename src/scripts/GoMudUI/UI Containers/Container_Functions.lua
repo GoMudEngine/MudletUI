@@ -1,19 +1,24 @@
 function ui.getContainerPositions()
   ui.containerPositions = {}
   Adjustable.Container:doAll(
-  function(self)
-    local name = self.name
-    
-    if string.match(self.name, "container") then
-      display(self.windowList[windowName])
-      ui.containerPositions[name] = {}
-      ui.containerPositions[name].x = self:get_x()
-      ui.containerPositions[name].y = self:get_y()
-      ui.containerPositions[name].height = self:get_height()
-      ui.containerPositions[name].width = self:get_width()
+    function(self)
+      local name = self.name
+      
+      if string.match(self.name, "container") then
+        -- Remove or fix the display line
+        -- display(self.windowList[windowName]) <- This line has an undefined variable
+        
+        ui.containerPositions[name] = {}
+        ui.containerPositions[name].x = self:get_x()
+        ui.containerPositions[name].y = self:get_y()
+        ui.containerPositions[name].height = self:get_height()
+        ui.containerPositions[name].width = self:get_width()
+      end
     end
-  end
   )
+  
+  -- Add a return statement to return the populated table
+  return ui.containerPositions
 end
 
 
