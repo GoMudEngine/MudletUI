@@ -117,8 +117,10 @@ function ui.postInstallHandling(_, package)
 end
 
 function ui.gameEngineCommand()
+  if not gmcp.Client.GUI.gomudui then
+    return
+  end
   local command = gmcp.Client.GUI.gomudui
-  echo(command)
   if command == "update" then
     ui.manualUpdate = true
     ui.checkForUpdate()

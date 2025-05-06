@@ -59,7 +59,8 @@ elseif command == "update" then
   end
   
 elseif command == "check" then
-  ui.manualUpdateCheck()
+  ui.manualUpdate = true
+  ui.checkForUpdate()
 
 elseif command =="color" then
   cecho("\n <YellowGreen>Choose which item you want to change color on, \n then click on a color name to change to\n\n")

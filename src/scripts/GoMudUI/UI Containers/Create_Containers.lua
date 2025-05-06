@@ -260,9 +260,11 @@ function ui.createContainers(arg)
   
   if arg == "reset" then
     ui.displayUIMessage("UI layout set to default")
+    raiseWindow("mapper")
   end
   if arg == "startup" then
     ui.displayUIMessage("UI containers created\n")
     raiseEvent("UICreated")
+    raiseWindow("mapper")
   end
 end
