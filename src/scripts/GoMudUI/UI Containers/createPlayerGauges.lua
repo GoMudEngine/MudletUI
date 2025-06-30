@@ -1,10 +1,8 @@
 function ui.createPlayerGuages()
 	-- Set all the styles needed for the gauges
-
 	local gaugeBorder = "border-radius: 3px;border: 1px solid rgba(160, 160, 160, 50%);"
 
 	ui.styles = {
-
 		gaugeText = f([[{ui.cssFont} qproperty-alignment: 'AlignRight|AlignVCenter';]]),
 
 		HPGaugeFront = f([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(150, 25, 25), stop: 0.1 rgb(180,0,0), stop: 0.85 rgb(155,0,0), stop: 1 rgb(130,0,0)); {gaugeBorder}]]),
@@ -23,8 +21,8 @@ function ui.createPlayerGuages()
 		enemyGaugeBack = f([[background-color: rgb(60, 0, 0); {gaugeBorder}]]),
 	}
 
-	-- Create the HP guage
-	ui.hpGauge = Geyser.Gauge:new({
+	-- Create the HP gauge using the factory function
+	ui.hpGauge = ui.createGauge("HP", {
 		name = "hpGauge",
 		x = 10,
 		y = 0,
@@ -33,18 +31,7 @@ function ui.createPlayerGuages()
 		font = ui.settings.consoleFont,
 	}, ui.gaugeDisplay)
 
-	-- set the front and back styling for the guage
-	ui.hpGauge.front:setStyleSheet(ui.styles.HPGaugeFront)
-	ui.hpGauge.back:setStyleSheet(ui.styles.HPGaugeBack)
-
-	-- Set the gauge text styling
-	ui.hpGauge.text:setStyleSheet(ui.styles.gaugeText)
-	ui.hpGauge.text:setFontSize(ui.settings.gaugeFontSize)
-
-	-- Center the text on the gauge
-	ui.hpGauge.text:echo(nil, "nocolor", "c")
-
-	-- Set the label for the guage
+	-- Create HP label
 	ui.hpLabel = Geyser.Label:new({
 		name = "hpLabel",
 		x = 5,
@@ -53,12 +40,11 @@ function ui.createPlayerGuages()
 		height = 20,
 		message = "HP",
 	}, ui.hpGauge)
-
 	ui.hpLabel:setStyleSheet(ui.styles.vitalsLabel)
 	ui.hpLabel:setFontSize(ui.settings.gaugeFontSize)
 
-	-- Create the Mana guage
-	ui.spGauge = Geyser.Gauge:new({
+	-- Create the SP gauge using the factory function
+	ui.spGauge = ui.createGauge("SP", {
 		name = "spGauge",
 		x = 10,
 		y = 30,
@@ -66,18 +52,7 @@ function ui.createPlayerGuages()
 		height = 20,
 	}, ui.gaugeDisplay)
 
-	-- set the front and back styling for the guage
-	ui.spGauge.front:setStyleSheet(ui.styles.SPGaugeFront)
-	ui.spGauge.back:setStyleSheet(ui.styles.SPGaugeBack)
-
-	-- Set the gauge text styling
-	ui.spGauge.text:setStyleSheet(ui.styles.gaugeText)
-	ui.spGauge.text:setFontSize(ui.settings.gaugeFontSize)
-
-	-- Center the text on the gauge
-	ui.spGauge.text:echo(nil, "nocolor", "c")
-
-	-- Set the label for the guage
+	-- Create SP label
 	ui.spLabel = Geyser.Label:new({
 		name = "spLabel",
 		x = 5,
@@ -86,12 +61,11 @@ function ui.createPlayerGuages()
 		height = 20,
 		message = "SP",
 	}, ui.spGauge)
-
 	ui.spLabel:setStyleSheet(ui.styles.vitalsLabel)
 	ui.spLabel:setFontSize(ui.settings.gaugeFontSize)
 
-	-- Create the Balance guage
-	ui.balGauge = Geyser.Gauge:new({
+	-- Create the Balance gauge using the factory function
+	ui.balGauge = ui.createGauge("balance", {
 		name = "balGauge",
 		x = 270,
 		y = 30,
@@ -99,35 +73,16 @@ function ui.createPlayerGuages()
 		height = 20,
 	}, ui.gaugeDisplay)
 
-	-- set the front and back styling for the guage
-	ui.balGauge.front:setStyleSheet(ui.styles.balanceGaugeFront)
-	ui.balGauge.back:setStyleSheet(ui.styles.balanceGaugeBack)
-
-	-- Set the gauge text styling
-	ui.balGauge.text:setStyleSheet(ui.styles.gaugeText)
-	ui.balGauge.text:setFontSize(ui.settings.gaugeFontSize)
-
-	-- Center the text on the gauge
-	ui.balGauge.text:echo(nil, "nocolor", "c")
-
-	-- Create the Enemy HP guage
-	ui.enemyGauge = Geyser.Gauge:new({
+	-- Create the Enemy HP gauge using the factory function
+	ui.enemyGauge = ui.createGauge("enemy", {
 		name = "enemyGauge",
 		x = 270,
 		y = 0,
 		width = 250,
 		height = 20,
 	}, ui.gaugeDisplay)
-	-- set the front styling for the Enemy HP guage
-	ui.enemyGauge.front:setStyleSheet(ui.styles.enemyGaugeFront)
-	-- set the back styling for the Enemy HP guage
-	ui.enemyGauge.back:setStyleSheet(ui.styles.enemyGaugeBack)
-	-- Set the gauge text styling
-	ui.enemyGauge.text:setStyleSheet(ui.styles.gaugeText)
-	ui.enemyGauge.text:setFontSize(ui.settings.gaugeFontSize)
-	ui.enemyGauge.text:echo(nil, "nocolor", "c")
 
-	-- Set the default label for the Enemy HP guage
+	-- Create enemy label
 	ui.enemyLabel = Geyser.Label:new({
 		name = "enemyLabel",
 		x = 5,
@@ -135,7 +90,23 @@ function ui.createPlayerGuages()
 		width = "100%",
 		height = "100%",
 	}, ui.enemyGauge)
-	-- set the label background to be transparent
 	ui.enemyLabel:setStyleSheet(ui.styles.vitalsLabel)
 	ui.enemyLabel:setFontSize(ui.settings.gaugeFontSize)
+end
+
+-- Helper function to create gauge labels
+function ui.createGaugeLabel(name, message, parent)
+	local label = Geyser.Label:new({
+		name = name,
+		x = 5,
+		y = 0,
+		width = parent == ui.enemyGauge and "100%" or 250,
+		height = parent == ui.enemyGauge and "100%" or 20,
+		message = message or "",
+	}, parent)
+	
+	label:setStyleSheet(ui.styles.vitalsLabel)
+	label:setFontSize(ui.settings.gaugeFontSize)
+	
+	return label
 end

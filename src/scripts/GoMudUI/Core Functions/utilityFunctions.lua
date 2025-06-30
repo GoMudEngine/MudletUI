@@ -230,3 +230,148 @@ function ui.getTimeElapsed(loginTimestamp)
 	local seconds = diffSeconds % 60
 	return string.format("<gold>%02d<white>h <gold>%02d<white>m <gold>%02d<white>s", hours, minutes, seconds)
 end
+
+-- GMCP validation helper
+-- Checks if a nested GMCP path exists
+-- Usage: ui.hasGmcpData("Char", "Status", "level")
+function ui.hasGmcpData(...)
+    local args = {...}
+    local current = gmcp
+    
+    for i = 1, #args do
+        if not current or not current[args[i]] then
+            return false
+        end
+        current = current[args[i]]
+    end
+    
+    return true
+end
+
+-- Get GMCP data safely with optional default value
+-- Usage: ui.getGmcpData("defaultValue", "Char", "Status", "level")
+function ui.getGmcpData(default, ...)
+    if not ui.hasGmcpData(...) then
+        return default
+    end
+    
+    local args = {...}
+    local current = gmcp
+    
+    for i = 1, #args do
+        current = current[args[i]]
+    end
+    
+    return current
+end
+
+-- Create a formatted header using fText
+-- Usage: ui.createHeader("Character", "Level 50", displayWidth)
+function ui.createHeader(title, subtitle, displayWidth)
+    local width = math.floor(displayWidth / ui.consoleFontWidth)
+    local headerText = subtitle and 
+        string.format("<white>[ <gold>%s<white>: %s <white>]<reset>", title, subtitle) or
+        string.format("<white>[ <gold>%s <white>]<reset>", title)
+    
+    return fText.fText(headerText, {
+        alignment = "center",
+        formatType = "c",
+        width = width,
+        cap = "",
+        spacer = "-",
+        inside = true,
+        mirror = true,
+    })
+end
+
+-- Base update function for displays
+-- Handles common patterns: GMCP checks, clearing, and updating
+function ui.updateDisplay(displayName, tabName, updateFunc)
+    local display = ui[displayName]
+    if not display then
+        return
+    end
+    
+    -- Clear the display
+    display:clear(tabName)
+    
+    -- Call the specific update function
+    if updateFunc then
+        updateFunc(display, tabName)
+    end
+end
+
+-- Calculate display width in characters
+function ui.getDisplayWidthInChars(display)
+    if not display or not display.get_width then
+        return 80  -- default width
+    end
+    return math.floor(display:get_width() / ui.consoleFontWidth)
+end
+
+-- Create a gauge with standard styling
+function ui.createGauge(name, params)
+    local gauge = Geyser.Gauge:new(params)
+    
+    -- Apply standard styles if they exist
+    if ui.styles then
+        if ui.styles[name .. "GaugeFront"] then
+            gauge.front:setStyleSheet(ui.styles[name .. "GaugeFront"])
+        end
+        if ui.styles[name .. "GaugeBack"] then
+            gauge.back:setStyleSheet(ui.styles[name .. "GaugeBack"])
+        end
+        if ui.styles.gaugeText then
+            gauge.text:setStyleSheet(ui.styles.gaugeText)
+        end
+    end
+    
+    -- Set font size
+    if ui.settings and ui.settings.gaugeFontSize then
+        gauge.text:setFontSize(ui.settings.gaugeFontSize)
+    end
+    
+    -- Center text
+    gauge.text:echo(nil, "nocolor", "c")
+    
+    return gauge
+end
+
+-- Format a value with color based on percentage
+function ui.colorByPercent(current, max, value)
+    if not current or not max or max == 0 then
+        return "<white>" .. (value or "0") .. "<reset>"
+    end
+    
+    local percent = (current / max) * 100
+    local color
+    
+    if percent >= 75 then
+        color = "<green>"
+    elseif percent >= 50 then
+        color = "<yellow>"
+    elseif percent >= 25 then
+        color = "<orange>"
+    else
+        color = "<red>"
+    end
+    
+    return color .. (value or current) .. "<reset>"
+end
+
+-- Common display echo with consistent formatting
+function ui.displayEcho(display, tabName, content, alignment)
+    if not display or not tabName then
+        return
+    end
+    
+    alignment = alignment or "left"
+    
+    if alignment == "center" then
+        display:cecho(tabName, "<center>" .. content .. "</center>")
+    elseif alignment == "right" then
+        display:cecho(tabName, "<right>" .. content .. "</right>")
+    else
+        display:cecho(tabName, content)
+    end
+end

@@ -1,92 +1,64 @@
 function ui.updateCharDisplay()
-	-- Early returns if required GMCP data is missing
-	if gmcp.Char == nil then
-		return
-	end
-	if gmcp.Char.Info == nil then
-		return
-	end
-	if gmcp.Char.Worth == nil then
-		return
-	end
+    -- Check if required GMCP data is available
+    if not ui.hasGmcpData("Char", "Info") or not ui.hasGmcpData("Char", "Worth") then
+        return
+    end
 
-	-- Extract character info with defaults
-	local name = gmcp.Char.Info.name or "None"
-	local race = ui.titleCase(gmcp.Char.Info.race) or "None"
-	local class = ui.titleCase(gmcp.Char.Info.class) or "None"
-	local alignment = ui.titleCase(gmcp.Char.Info.alignment) or "None"
-	local level = gmcp.Char.Info.level or 1
+    -- Extract character info with defaults
+    local name = ui.getGmcpData("None", "Char", "Info", "name")
+    local race = ui.titleCase(ui.getGmcpData("none", "Char", "Info", "race"))
+    local class = ui.titleCase(ui.getGmcpData("none", "Char", "Info", "class"))
+    local alignment = ui.titleCase(ui.getGmcpData("none", "Char", "Info", "alignment"))
+    local level = ui.getGmcpData(1, "Char", "Info", "level")
 
-	-- Clear and update display
-	ui.charDisplay:clear("Character")
+    -- Use the update display utility
+    ui.updateDisplay("charDisplay", "Character", function(display, tabName)
+        -- Header with centered formatting
+        local headerText = string.format("<dodger_blue>%s<white> Lvl<gold>: <dodger_blue>%s", name, level)
+        display:cecho(tabName, ui.createHeader("Name", headerText, display:get_width()))
 
-	-- Header with centered formatting
-	ui.charDisplay:cecho(
-		"Character",
-		fText.fText(
-			"<white>[ <gold>Name: <dodger_blue>"
-				.. name
-				.. "<white> Lvl<gold>: <dodger_blue>"
-				.. level
-				.. "<white> ]<reset>",
-			{
-				alignment = "center",
-				formatType = "c",
-				width = math.floor(ui.charDisplay:get_width() / ui.consoleFontWidth),
-				cap = "",
-				spacer = "-",
-				inside = true,
-				mirror = true,
-			}
-		)
-	)
+        display:cecho(tabName, "\n")
+        display:cecho(tabName, "<white>Race<gold>: <grey>" .. race .. "  <cyan>Class<gold>: <grey>" .. class)
+        display:cecho(tabName, "\n")
+        display:cecho(tabName, "<white>Alignment<gold>: <grey>" .. alignment)
+        display:cecho(tabName, "\n\n")
 
-	ui.charDisplay:cecho("Character", "\n")
-	ui.charDisplay:cecho("Character", "<white>Race<gold>: <grey>" .. race .. "  <cyan>Class<gold>: <grey>" .. class)
-	ui.charDisplay:cecho("Character", "\n")
-	ui.charDisplay:cecho("Character", "<white>Alignment<gold>: <grey>" .. alignment)
-	ui.charDisplay:cecho("Character", "\n\n")
+        -- Stats section (if available)
+        if ui.hasGmcpData("Char", "Stats") then
+            -- Worth points
+            local skillPoints = ui.getGmcpData("0", "Char", "Worth", "skillpoints")
+            local trainingPoints = ui.getGmcpData("0", "Char", "Worth", "trainingpoints")
 
-	-- Stats section (if available)
-	if gmcp.Char.Stats then
-		-- Worth points
-		ui.charDisplay:cecho(
-			"Character",
-			"<SeaGreen>Skill Points<white>: <white>"
-				.. (gmcp.Char.Worth.skillpoints or "0")
-				.. "  <DodgerBlue>Training Points<white>: <white>"
-				.. (gmcp.Char.Worth.trainingpoints or "0")
-		)
-		ui.charDisplay:cecho("Character", "\n\n")
+            display:cecho(tabName,
+                "<SeaGreen>Skill Points<white>: <white>" .. skillPoints ..
+                "  <DodgerBlue>Training Points<white>: <white>" .. trainingPoints
+            )
+            display:cecho(tabName, "\n\n")
 
-		-- Stats display (paired for better layout)
-		ui.charDisplay:cecho(
-			"Character",
-			"<SkyBlue>Mysticism<white>: <gold>" .. string.format("%2d", gmcp.Char.Stats.mysticism or 0)
-		)
-		ui.charDisplay:cecho(
-			"Character",
-			"    <SkyBlue>Perception<white>:    <gold>" .. string.format("%2d", gmcp.Char.Stats.perception or 0)
-		)
-		ui.charDisplay:cecho("Character", "\n")
+            -- Stats display (paired for better layout)
+            local mysticism = ui.getGmcpData(0, "Char", "Stats", "mysticism")
+            local perception = ui.getGmcpData(0, "Char", "Stats", "perception")
+            local smarts = ui.getGmcpData(0, "Char", "Stats", "smarts")
+            local speed = ui.getGmcpData(0, "Char", "Stats", "speed")
+            local strength = ui.getGmcpData(0, "Char", "Stats", "strength")
+            local vitality = ui.getGmcpData(0, "Char", "Stats", "vitality")
 
-		ui.charDisplay:cecho(
-			"Character",
-			"<SkyBlue>Smarts<white>:    <gold>" .. string.format("%2d", gmcp.Char.Stats.smarts or 0)
-		)
-		ui.charDisplay:cecho(
-			"Character",
-			"    <SkyBlue>Speed<white>:         <gold>" .. string.format("%2d", gmcp.Char.Stats.speed or 0)
-		)
-		ui.charDisplay:cecho("Character", "\n")
+            display:cecho(tabName,
+                "<SkyBlue>Mysticism<white>: <gold>" .. string.format("%2d", mysticism) ..
+                "    <SkyBlue>Perception<white>:    <gold>" .. string.format("%2d", perception)
+            )
+            display:cecho(tabName, "\n")
 
-		ui.charDisplay:cecho(
-			"Character",
-			"<SkyBlue>Strength<white>:  <gold>" .. string.format("%2d", gmcp.Char.Stats.strength or 0)
-		)
-		ui.charDisplay:cecho(
-			"Character",
-			"    <SkyBlue>Vitality<white>:      <gold>" .. string.format("%2d", gmcp.Char.Stats.vitality or 0)
-		)
-	end
+            display:cecho(tabName,
+                "<SkyBlue>Smarts<white>:    <gold>" .. string.format("%2d", smarts) ..
+                "    <SkyBlue>Speed<white>:         <gold>" .. string.format("%2d", speed)
+            )
+            display:cecho(tabName, "\n")
+
+            display:cecho(tabName,
+                "<SkyBlue>Strength<white>:  <gold>" .. string.format("%2d", strength) ..
+                "    <SkyBlue>Vitality<white>:      <gold>" .. string.format("%2d", vitality)
+            )
+        end
+    end)
 end
