@@ -4,7 +4,8 @@
 -- @copyright 2020 Damian Monogue
 -- @license MIT, see LICENSE.lua
 local DemonTools = {}
-local cheatConsole = Geyser.MiniConsole:new({name = "DemonnicCheatConsole", width = 4000, wrapWidth = 10000, color = "black"})
+local cheatConsole = Geyser.MiniConsole:new({ name = "DemonnicCheatConsole", width = 4000, wrapWidth = 10000, color =
+"black" })
 cheatConsole:hide()
 local function exists(path)
   path = path:gsub([[\$]], "")
@@ -18,9 +19,9 @@ end
 
 local function isDir(path)
   if not exists(path) then return false end
-    path = path:gsub([[\]], "/")
+  path = path:gsub([[\]], "/")
   if path:ends("/") then
-    path = path:sub(1,-2)
+    path = path:sub(1, -2)
   end
   local ok, err, code = lfs.attributes(path, "mode")
   if ok then
@@ -47,7 +48,7 @@ local function mkdir_p(path)
       cwd = cwd .. "/" .. dirName
       cwd = cwd:gsub("//", "/")
     end
-    if not table.contains({"/", "C:"}, cwd) and not exists(cwd) then
+    if not table.contains({ "/", "C:" }, cwd) and not exists(cwd) then
       local ok, err = lfs.mkdir(cwd)
       if not ok then
         return ok, err
@@ -67,7 +68,7 @@ local htmlHeader = [=[  <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitiona
       body {
         background-color: black;
         font-family: 'Droid Sans Mono';
-        white-space: pre; 
+        white-space: pre;
         font-size: 12px;
       }
     </style>
@@ -85,7 +86,7 @@ local htmlHeaderPattern = [=[  <!DOCTYPE HTML PUBLIC "%-//W3C//DTD HTML 4.01 Tra
       body {
         background%-color: black;
         font%-family: 'Droid Sans Mono';
-        white%-space: pre; 
+        white%-space: pre;
         font%-size: 12px;
       }
     </style>
@@ -266,11 +267,13 @@ local function rgbToAnsi(rgb)
   local back = cols[2]
   if fore ~= "" then
     local components = fore:split(",")
-    result = string.format("%s\27[38:2::%s:%s:%sm", result, components[1] or "0", components[2] or "0", components[3] or "0")
+    result = string.format("%s\27[38:2::%s:%s:%sm", result, components[1] or "0", components[2] or "0",
+      components[3] or "0")
   end
   if back then
     local components = back:split(",")
-    result = string.format("%s\27[48:2::%s:%s:%sm", result, components[1] or "0", components[2] or "0", components[3] or "0")
+    result = string.format("%s\27[48:2::%s:%s:%sm", result, components[1] or "0", components[2] or "0",
+      components[3] or "0")
   end
   return result
 end
@@ -282,12 +285,14 @@ local function hexToAnsi(hexcode)
   local fore = cols[1]
   local back = cols[2]
   if fore ~= "" then
-    local components = {tonumber(fore:sub(1, 2), 16), tonumber(fore:sub(3, 4), 16), tonumber(fore:sub(5, 6), 16)}
-    result = string.format("%s\27[38:2::%s:%s:%sm", result, components[1] or "0", components[2] or "0", components[3] or "0")
+    local components = { tonumber(fore:sub(1, 2), 16), tonumber(fore:sub(3, 4), 16), tonumber(fore:sub(5, 6), 16) }
+    result = string.format("%s\27[38:2::%s:%s:%sm", result, components[1] or "0", components[2] or "0",
+      components[3] or "0")
   end
   if back then
-    local components = {tonumber(back:sub(1, 2), 16), tonumber(back:sub(3, 4), 16), tonumber(back:sub(5, 6), 16)}
-    result = string.format("%s\27[48:2::%s:%s:%sm", result, components[1] or "0", components[2] or "0", components[3] or "0")
+    local components = { tonumber(back:sub(1, 2), 16), tonumber(back:sub(3, 4), 16), tonumber(back:sub(5, 6), 16) }
+    result = string.format("%s\27[48:2::%s:%s:%sm", result, components[1] or "0", components[2] or "0",
+      components[3] or "0")
   end
   return result
 end
@@ -344,20 +349,20 @@ local function cnameToRgb(cname)
   local fore = cols[1]
   local back = cols[2]
   if fore ~= "" then
-    local rgb = color_table[fore] or {0, 0, 0}
+    local rgb = color_table[fore] or { 0, 0, 0 }
     result = string.format("%s%s", result, table.concat(rgb, ","))
   end
   if back then
-    local rgb = color_table[back] or {0, 0, 0}
+    local rgb = color_table[back] or { 0, 0, 0 }
     result = string.format("%s:%s", result, table.concat(rgb, ","))
   end
   return string.format("%s>", result)
 end
 
 local function toFromDecho(from, to, text)
-  local patterns = {d = _Echos.Patterns.Decimal[1], c = _Echos.Patterns.Color[1], h = _Echos.Patterns.Hex[1]}
-  local funcs = {d = {c = rgbToCname, h = rgbToHex, a = rgbToAnsi}, c = {d = cnameToRgb}, h = {d = hexToRgb}}
-  local resetCodes = {d = "<r>", h = "#r", c = "<reset>", a = "\27[39;49m"}
+  local patterns = { d = _Echos.Patterns.Decimal[1], c = _Echos.Patterns.Color[1], h = _Echos.Patterns.Hex[1] }
+  local funcs = { d = { c = rgbToCname, h = rgbToHex, a = rgbToAnsi }, c = { d = cnameToRgb }, h = { d = hexToRgb } }
+  local resetCodes = { d = "<r>", h = "#r", c = "<reset>", a = "\27[39;49m" }
 
   local colorPattern = patterns[from]
   local func = funcs[from][to]
@@ -416,7 +421,7 @@ end
 local function ansi2decho(tstring)
   local cpattern = [=[\e\[([0-9;:]+)m]=]
   local result = ""
-  local resets = {"39;49", "00", "0"}
+  local resets = { "39;49", "00", "0" }
   local colours = {
     [0] = color_table.ansiBlack,
     [1] = color_table.ansiRed,
@@ -465,7 +470,7 @@ local function ansi2decho(tstring)
         if b == "" then
           b = 0
         end
-        rgb = {r, g, b}
+        rgb = { r, g, b }
       end
     end
     return rgb
@@ -570,7 +575,7 @@ local function displayColors(options)
     local color = {}
     color.rgb = v
     color.name = k
-    color.sort = {step(unpack(v))}
+    color.sort = { step(unpack(v)) }
     if include(k, options) and k:lower():find(search) then
       table.insert(colors, color)
     end
@@ -828,7 +833,7 @@ function string.tocolor(self)
   local g = math.random(0, 255)
   local b = math.random(0, 255)
   math.randomseed(os.time())
-  return {r, g, b}
+  return { r, g, b }
 end
 
 local function colorMunge(strForColor, strToEcho, format)
@@ -1182,7 +1187,8 @@ end
 function DemonTools.roundInt(number)
   local num = tonumber(number)
   local numType = type(num)
-  assert(numType == "number", string.format("DemonTools.roundInt(number): number as number expected, got %s", type(number)))
+  assert(numType == "number",
+    string.format("DemonTools.roundInt(number): number as number expected, got %s", type(number)))
   return roundInt(num)
 end
 
@@ -1211,7 +1217,7 @@ function DemonTools.colorMunge(strForColor, strToColor, format)
   return colorMunge(strForColor, strToColor, format)
 end
 
---- Like colorMunge but also echos the result to win. 
+--- Like colorMunge but also echos the result to win.
 -- @tparam string strForColor the string to turn into a color using DemonTools.string2color
 -- @tparam string strToEcho the string you want to color and echo based on strForColor
 -- @param format What format to use for the color portion. "d" for decho, "c" for cecho, or "h" for hecho. Defaults to "d"
@@ -1342,15 +1348,15 @@ function DemonTools.toHTML(t, reset)
   }
   local format = table.deepcopy(reset)
   local result = getHTMLformat(format)
-  for _,v in ipairs(t) do
+  for _, v in ipairs(t) do
     local formatChanged = false
     if type(v) == "table" then
       if v.fg then
-        format.foreground = {v.fg[1], v.fg[2], v.fg[3]}
+        format.foreground = { v.fg[1], v.fg[2], v.fg[3] }
         formatChanged = true
       end
       if v.bg then
-        format.background = {v.bg[1], v.bg[2], v.bg[3]}
+        format.background = { v.bg[1], v.bg[2], v.bg[3] }
         formatChanged = true
       end
     elseif v == "\27bold" then
@@ -1397,7 +1403,7 @@ local function toEcho(colorType, colors)
   colorType = colorType:lower()
   local result
   if colorType == "hex" then
-    local fg,bg = "", ""
+    local fg, bg = "", ""
     if colors.fg then
       fg = string.format("%02x%02x%02x", unpack(colors.fg))
     end
@@ -1406,7 +1412,7 @@ local function toEcho(colorType, colors)
     end
     result = string.format("#%s%s", fg, bg)
   elseif colorType == "color" then
-    local fg,bg = "",""
+    local fg, bg = "", ""
     if colors.fg then
       fg = closestColor(colors.fg)
     end
@@ -1415,7 +1421,7 @@ local function toEcho(colorType, colors)
     end
     result = string.format("<%s%s>", fg, bg)
   elseif colorType == "decimal" then
-    local fg,bg = "", ""
+    local fg, bg = "", ""
     if colors.fg then
       fg = string.format("%d,%d,%d", unpack(colors.fg))
     end
@@ -1458,7 +1464,8 @@ function DemonTools.echoConverter(str, from, to, resetFormat)
   from = from:title()
   local t = echoProcess(str, from)
   if not echoPatterns[from] then
-    local msg = "argument #4 (from) must be a valid echo type. Valid types are: " .. table.concat(table.keys(echoPatterns), ",")
+    local msg = "argument #4 (from) must be a valid echo type. Valid types are: " ..
+    table.concat(table.keys(echoPatterns), ",")
   end
   local processed = echoProcess(str, from)
   if to:lower() == "html" then
@@ -1466,7 +1473,8 @@ function DemonTools.echoConverter(str, from, to, resetFormat)
   end
   local outputs = echoOutputs[to]
   if not outputs then
-    local msg = "argument #3 (to) must be a valid echo type. Valid types are: " .. table.concat(table.keys(echoOutputs), ",")
+    local msg = "argument #3 (to) must be a valid echo type. Valid types are: " ..
+    table.concat(table.keys(echoOutputs), ",")
     printError(msg, true, true)
   end
   local result = ""

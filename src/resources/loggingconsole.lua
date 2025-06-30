@@ -8,7 +8,7 @@ local pathOfThisFile = (...):match("(.-)[^%.]+$")
 local dt = require(pathOfThisFile .. "demontools")
 local exists, htmlHeader, htmlHeaderPattern = dt.exists, dt.htmlHeader, dt.htmlHeaderPattern
 
-local LoggingConsole = {log = true, logFormat = "h", path = "|h/log/consoleLogs/|y/|m/|d/", fileName = "|n.|e"}
+local LoggingConsole = { log = true, logFormat = "h", path = "|h/log/consoleLogs/|y/|m/|d/", fileName = "|n.|e" }
 
 --- Creates and returns a new LoggingConsole.
 -- @param cons table of constraints. Includes all the valid Geyser.MiniConsole constraints, plus
@@ -56,7 +56,8 @@ local LoggingConsole = {log = true, logFormat = "h", path = "|h/log/consoleLogs/
 function LoggingConsole:new(cons, container)
   cons = cons or {}
   local consType = type(cons)
-  assert(consType == "table", "LoggingConsole:new(cons, container): cons must be a valid table of constraints. Got: " .. consType)
+  assert(consType == "table",
+    "LoggingConsole:new(cons, container): cons must be a valid table of constraints. Got: " .. consType)
   local me = Geyser.MiniConsole:new(cons, container)
   setmetatable(me, self)
   self.__index = self
@@ -66,7 +67,7 @@ end
 --- Returns the file extension of the logfile this console will log to
 function LoggingConsole:getExtension()
   local extension = "log"
-  if table.contains({"h", "html"}, self.logFormat) then
+  if table.contains({ "h", "html" }, self.logFormat) then
     extension = "html"
   end
   return extension

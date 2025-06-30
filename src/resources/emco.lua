@@ -52,7 +52,7 @@ local EMCO = Geyser.Container:new({
 -- patch Geyser.MiniConsole if it does not have its own display method defined
 if Geyser.MiniConsole.display == Geyser.display then
   function Geyser.MiniConsole:display(...)
-    local arg = {...}
+    local arg = { ... }
     arg.n = table.maxn(arg)
     if arg.n > 1 then
       for i = 1, arg.n do
@@ -373,13 +373,15 @@ function EMCO:new(cons, container)
   local funcName = "EMCO:new(cons, container)"
   cons = cons or {}
   cons.type = cons.type or "tabbedConsole"
-  cons.consoles = cons.consoles or {"All"}
+  cons.consoles = cons.consoles or { "All" }
   if cons.mapTab then
     if not type(cons.mapTabName) == "string" then
-      self:ce(funcName, [["mapTab" is true, thus constraint "mapTabName" as string expected, got ]] .. type(cons.mapTabName))
+      self:ce(funcName,
+        [["mapTab" is true, thus constraint "mapTabName" as string expected, got ]] .. type(cons.mapTabName))
     elseif not table.contains(cons.consoles, cons.mapTabName) then
-      self:ce(funcName, [["mapTabName" must be one of the consoles contained within constraint "consoles". Valid option for tha mapTab are: ]] ..
-                table.concat(cons.consoles, ","))
+      self:ce(funcName,
+        [["mapTabName" must be one of the consoles contained within constraint "consoles". Valid option for tha mapTab are: ]] ..
+        table.concat(cons.consoles, ","))
     end
   end
   cons.allTabExclusions = cons.allTabExclusions or {}
@@ -466,10 +468,10 @@ function EMCO:new(cons, container)
     me:enableBlink()
   end
   me.gags = {}
-  for _,pattern in ipairs(cons.gags or {}) do
+  for _, pattern in ipairs(cons.gags or {}) do
     me:addGag(pattern)
   end
-  for _,tname in ipairs(cons.notifyTabs or {}) do
+  for _, tname in ipairs(cons.notifyTabs or {}) do
     me:addNotifyTab(tname)
   end
   if me:fuzzyBoolean(cons.notifyWithFocus) then
@@ -543,12 +545,15 @@ function EMCO:readYATCO()
   end
   constraints = string.format("%s  preserveBackground = %s,\n", constraints, tostring(config.preserveBackground))
   constraints = string.format("%s  gag = %s,\n", constraints, tostring(config.gag))
-  constraints = string.format("%s  activeTabBGColor = \"<%s,%s,%s>\",\n", constraints, config.activeColors.r, config.activeColors.g,
-                              config.activeColors.b)
-  constraints = string.format("%s  inactiveTabBGColor = \"<%s,%s,%s>\",\n", constraints, config.inactiveColors.r, config.inactiveColors.g,
-                              config.inactiveColors.b)
+  constraints = string.format("%s  activeTabBGColor = \"<%s,%s,%s>\",\n", constraints, config.activeColors.r,
+    config.activeColors.g,
+    config.activeColors.b)
+  constraints = string.format("%s  inactiveTabBGColor = \"<%s,%s,%s>\",\n", constraints, config.inactiveColors.r,
+    config.inactiveColors.g,
+    config.inactiveColors.b)
   constraints =
-    string.format("%s  consoleColor = \"<%s,%s,%s>\",\n", constraints, config.windowColors.r, config.windowColors.g, config.windowColors.b)
+      string.format("%s  consoleColor = \"<%s,%s,%s>\",\n", constraints, config.windowColors.r, config.windowColors.g,
+        config.windowColors.b)
   constraints = string.format("%s  activeTabFGColor = \"%s\",\n", constraints, config.activeTabText)
   constraints = string.format("%s  inactiveTabFGColor = \"%s\"", constraints, config.inactiveTabText)
   constraints = string.format("%s\n})", constraints)
@@ -573,7 +578,7 @@ function EMCO:convertYATCO()
   local header = [[
   <white>(<blue>EMCO<white>)<reset> Found a YATCO config. Make a new script, then copy and paste the following output into it.
   <white>(<blue>EMCO<white>)<reset> Afterward, uninstall YATCO (you can leave YATCOConfig until you're sure everything is right) and restart Mudlet
-  <white>(<blue>EMCO<white>)<reset> If everything looks right, you can uninstall YATCOConfig. 
+  <white>(<blue>EMCO<white>)<reset> If everything looks right, you can uninstall YATCOConfig.
 
 
 -- Copy everything below this line until the next line starting with --
@@ -617,7 +622,8 @@ end
 function EMCO:display(tabName, ...)
   local funcName = "EMCO:display(tabName, item)"
   if not table.contains(self.consoles, tabName) then
-    self.ae(funcName, "tabName must be a tab which exists in this EMCO. valid options are: " .. table.concat(self.consoles, ","))
+    self.ae(funcName,
+      "tabName must be a tab which exists in this EMCO. valid options are: " .. table.concat(self.consoles, ","))
   end
   self.mc[tabName]:display(...)
 end
@@ -627,7 +633,8 @@ end
 function EMCO:removeTab(tabName)
   local funcName = "EMCO:removeTab(tabName)"
   if not table.contains(self.consoles, tabName) then
-    self.ae(funcName, "tabName must be a tab which exists in this EMCO. valid options are: " .. table.concat(self.consoles, ","))
+    self.ae(funcName,
+      "tabName must be a tab which exists in this EMCO. valid options are: " .. table.concat(self.consoles, ","))
   end
   if self.currentTab == tabName then
     if self.allTab and self.allTabName then
@@ -724,7 +731,7 @@ function EMCO:handleTabClick(tabName, onClickEvent)
 end
 
 function EMCO:createComponentsForTab(tabName)
-  local tab = Geyser.Label:new({name = string.format("%sTab%s", self.name, tabName)}, self.tabBox)
+  local tab = Geyser.Label:new({ name = string.format("%sTab%s", self.name, tabName) }, self.tabBox)
   if self.tabFont then
     tab:setFont(self.tabFont)
   end
@@ -821,10 +828,10 @@ function EMCO:setBackgroundImage(tabName, imagePath, mode)
   if imagePathType ~= "string" or not io.exists(imagePath) then
     self.ae(funcName, "imagePath must be a string and point to an existing image file")
   end
-  if modeType ~= "string" or not table.contains({"border", "center", "tile", "style"}, mode) then
+  if modeType ~= "string" or not table.contains({ "border", "center", "tile", "style" }, mode) then
     self.ae(funcName, "mode must be one of 'border', 'center', 'tile', or 'style'")
   end
-  local image = {image = imagePath, mode = mode}
+  local image = { image = imagePath, mode = mode }
   self.backgroundImages[tabName] = image
   self:processImage(tabName)
 end
@@ -939,13 +946,15 @@ function EMCO:setCmdLineStyleSheet(styleSheet)
     window:setCmdLineStyleSheet(styleSheet)
   end
 end
+
 --- Enables the commandLine on the specified tab.
 -- @tparam string tabName the name of the tab to turn the commandLine on for
 -- @param template the template for the commandline to use, or the function to run when enter is hit.
 -- @usage myEMCO:enableCmdLine(tabName, template)
 function EMCO:enableCmdLine(tabName, template)
   if not table.contains(self.consoles, tabName) then
-    return nil, f"{self.name}:enableCmdLine(tabName,template) tabName is not in the console list. Valid options are {table.concat(self.consoles, 'm')}"
+    return nil,
+        f "{self.name}:enableCmdLine(tabName,template) tabName is not in the console list. Valid options are {table.concat(self.consoles, 'm')}"
   end
   local window = self.mc[tabName]
   window:enableCommandLine()
@@ -973,7 +982,8 @@ end
 -- @tparam string tabName the name of the tab to disable the command line of.
 function EMCO:disableCmdLine(tabName)
   if not table.contains(self.consoles, tabName) then
-    return nil, f"{self.name}:disableCmdLine(tabName,template) tabName is not in the console list. Valid options are {table.concat(self.consoles, 'm')}"
+    return nil,
+        f "{self.name}:disableCmdLine(tabName,template) tabName is not in the console list. Valid options are {table.concat(self.consoles, 'm')}"
   end
   local window = self.mc[tabName]
   window:disableCommandLine()
@@ -1001,8 +1011,8 @@ function EMCO:setCmdAction(tabName, template)
       window:setCmdAction(template)
     else
       debugc(string.format(
-               "EMCO:setCmdAction(tabName, template): template must be a string or function if provided. Leaving CmdAction for tab %s be. Template type was: %s",
-               tabName, type(template)))
+        "EMCO:setCmdAction(tabName, template): template must be a string or function if provided. Leaving CmdAction for tab %s be. Template type was: %s",
+        tabName, type(template)))
     end
   else
     window:resetCmdAction()
@@ -1063,7 +1073,8 @@ function EMCO:createContainers()
     height = tostring(tonumber(self.tabHeight)) .. "px",
     name = self.name .. "TabBoxLabel",
   }, self)
-  self.tabBox = Geyser.HBox:new({x = 0, y = 0, width = "100%", height = "100%", name = self.name .. "TabBox"}, self.tabBoxLabel)
+  self.tabBox = Geyser.HBox:new({ x = 0, y = 0, width = "100%", height = "100%", name = self.name .. "TabBox" },
+    self.tabBoxLabel)
   self.tabBoxLabel:setStyleSheet(self.tabBoxCSS)
   self.tabBoxLabel:setColor(self.tabBoxColor)
 
@@ -1091,8 +1102,8 @@ function EMCO:fuzzyBoolean(bool)
   if type(bool) == "boolean" or bool == nil then
     return bool
   elseif tostring(bool) then
-    local truth = {"yes", "true", "0"}
-    local untruth = {"no", "false", "1"}
+    local truth = { "yes", "true", "0" }
+    local untruth = { "no", "false", "1" }
     local boolstr = tostring(bool)
     if table.contains(truth, boolstr) then
       return true
@@ -1154,8 +1165,9 @@ function EMCO:setFont(font)
   local af = getAvailableFonts()
   if not (af[font] or font == "") then
     local err = "EMCO:setFont(font): attempt to call setFont with font '" .. font ..
-                  "' which is not available, see getAvailableFonts() for valid options\n"
-    err = err .. "In the meantime, we will use a similar font which isn't the one you asked for but we hope is close enough"
+        "' which is not available, see getAvailableFonts() for valid options\n"
+    err = err ..
+    "In the meantime, we will use a similar font which isn't the one you asked for but we hope is close enough"
     debugc(err)
   end
   self.font = font
@@ -1177,8 +1189,9 @@ function EMCO:setSingleWindowFont(tabName, font)
   local af = getAvailableFonts()
   if not (af[font] or font == "") then
     local err = "EMCO:setSingleWindowFont(tabName, font): attempt to call setFont with font '" .. font ..
-                  "' which is not available, see getAvailableFonts() for valid options\n"
-    err = err .. "In the meantime, we will use a similar font which isn't the one you asked for but we hope is close enough"
+        "' which is not available, see getAvailableFonts() for valid options\n"
+    err = err ..
+    "In the meantime, we will use a similar font which isn't the one you asked for but we hope is close enough"
     debugc(err)
   end
   self.mc[tabName]:setFont(font)
@@ -1277,7 +1290,7 @@ function EMCO:setTimestampFormat(format)
   local strippedFormat = self:stripTimeChars(format)
   if strippedFormat ~= "" then
     self.ae(funcName,
-            "format contains invalid time format characters. Please see https://wiki.mudlet.org/w/Manual:Lua_Functions#getTime for formatting information")
+      "format contains invalid time format characters. Please see https://wiki.mudlet.org/w/Manual:Lua_Functions#getTime for formatting information")
   else
     self.timestampFormat = format
   end
@@ -1288,6 +1301,7 @@ end
 function EMCO:setTimestampBGColor(color)
   self.timestampBGColor = color
 end
+
 --- Sets the foreground color for the timestamp, if customTimestampColor is enabled.
 -- @param color Color string suitable for decho or hecho, or color name eg "purple", or table of colors {r,g,b}
 function EMCO:setTimestampFGColor(color)
@@ -1304,7 +1318,8 @@ function EMCO:setAllTabName(allTabName)
     self.ae(funcName, "allTabName expected as string, got" .. allTabNameType)
   end
   if not table.contains(self.consoles, allTabName) then
-    self.ae(funcName, "allTabName must be the name of one of the console tabs. Valid options are: " .. table.concat(self.consoles, ","))
+    self.ae(funcName,
+      "allTabName must be the name of one of the console tabs. Valid options are: " .. table.concat(self.consoles, ","))
   end
   self.allTabName = allTabName
 end
@@ -1325,7 +1340,7 @@ function EMCO:enableMapTab()
   local funcName = "EMCO:enableMapTab()"
   if not self.mapTabName then
     error(funcName ..
-            ": cannot enable the map tab, mapTabName not set. try running :setMapTabName(mapTabName) first with the name of the tab you want to bind the map to")
+      ": cannot enable the map tab, mapTabName not set. try running :setMapTabName(mapTabName) first with the name of the tab you want to bind the map to")
   end
   self.mapTab = true
   self:reset()
@@ -1350,7 +1365,8 @@ function EMCO:setMapTabName(mapTabName)
     self.ae(funcName, "mapTabName as string expected, got" .. mapTabNameType)
   end
   if not table.contains(self.consoles, mapTabName) and mapTabName ~= "" then
-    self.ae(funcName, "mapTabName must be one of the existing console tabs. Current tabs are: " .. table.concat(self.consoles, ","))
+    self.ae(funcName,
+      "mapTabName must be one of the existing console tabs. Current tabs are: " .. table.concat(self.consoles, ","))
   end
   self.mapTabName = mapTabName
 end
@@ -1683,7 +1699,8 @@ function EMCO:append(tabName, excludeAll)
   if tabNameType ~= "string" then
     self.ae(funcName, "tabName as string expected, got " .. tabNameType)
   elseif not validTab then
-    self.ae(funcName, "tabName must be a tab which is contained in this object. Valid tabnames are: " .. table.concat(self.consoles, ","))
+    self.ae(funcName,
+      "tabName must be a tab which is contained in this object. Valid tabnames are: " .. table.concat(self.consoles, ","))
   end
   self:xEcho(tabName, nil, 'a', excludeAll)
 end
@@ -1699,7 +1716,9 @@ function EMCO:checkEchoArgs(funcName, tabName, message, excludeAll)
   elseif messageType ~= "string" then
     ae(funcName, "message as string expected, got " .. messageType)
   elseif not validTabName and not self.newTabOnEcho then
-    ae(funcName, "tabName must be the name of a tab attached to this object. If you want to create the tab on the fly, set newTabOnEcho to true. Valid names are: " .. table.concat(self.consoles, ","))
+    ae(funcName,
+      "tabName must be the name of a tab attached to this object. If you want to create the tab on the fly, set newTabOnEcho to true. Valid names are: " ..
+      table.concat(self.consoles, ","))
   elseif excludeAllType ~= "nil" and excludeAllType ~= "boolean" then
     ae(funcName, "optional argument excludeAll expected as boolean, got " .. excludeAllType)
   end
@@ -1759,7 +1778,7 @@ end
 --@tparam string str The text you're testing against the gag patterns
 --@return false if it does not match any gag patterns. true and the matching pattern if it does match.
 function EMCO:matchesGag(str)
-  for pattern,_ in pairs(self.gags) do
+  for pattern, _ in pairs(self.gags) do
     if str:match(pattern) then
       return true, pattern
     end
@@ -1792,7 +1811,7 @@ end
 function EMCO:sendNotification(tabName, msg)
   if self.notifyWithFocus or not hasFocus() then
     if self.notifyTabs[tabName] then
-      showNotification(f'{self.name}:{tabName}', msg)
+      showNotification(f '{self.name}:{tabName}', msg)
     end
   end
 end
@@ -1803,17 +1822,17 @@ function EMCO:xEcho(tabName, message, xtype, excludeAll)
   end
   local console = self.mc[tabName]
   if console == nil and self.newTabOnEcho then
-      self:addTab(tabName)
-      console = self.mc[tabName]
+    self:addTab(tabName)
+    console = self.mc[tabName]
   end
   local allTab = (self.allTab and not excludeAll and not table.contains(self.allTabExclusions, tabName) and tabName ~= self.allTabName) and
-                   self.mc[self.allTabName] or false
+      self.mc[self.allTabName] or false
   local ofr, ofg, ofb, obr, obg, obb
   if xtype == "a" then
     local line = getCurrentLine()
     local mute, reason = self:matchesGag(line)
     if mute then
-      debugc(f"{self.name}:append(tabName) denied because current line matches the pattern '{reason}'")
+      debugc(f "{self.name}:append(tabName) denied because current line matches the pattern '{reason}'")
       return
     end
     selectCurrentLine()
@@ -1832,7 +1851,7 @@ function EMCO:xEcho(tabName, message, xtype, excludeAll)
   else
     local mute, reason = self:matchesGag(message)
     if mute then
-      debugc(f"{self.name}:{xtype}(tabName, msg, excludeAll) denied because msg matches '{reason}'")
+      debugc(f "{self.name}:{xtype}(tabName, msg, excludeAll) denied because msg matches '{reason}'")
       return
     end
     ofr, ofg, ofb = Geyser.Color.parse("white")
@@ -1963,13 +1982,13 @@ end
 function EMCO:xLink(tabName, linkType, text, commands, hints, useCurrentFormat, excludeAll)
   local gag, reason = self:matchesGag(text)
   if gag then
-    debugc(f"{self.name}:{linkType}(tabName, text, command, hint, excludeAll) denied because text matches '{reason}'")
+    debugc(f "{self.name}:{linkType}(tabName, text, command, hint, excludeAll) denied because text matches '{reason}'")
     return
   end
   local console = self.mc[tabName]
   local allTab = (self.allTab and not excludeAll and not table.contains(self.allTabExclusions, tabName) and tabName ~= self.allTabName) and
-                   self.mc[self.allTabName] or false
-  local arguments = {text, commands, hints, useCurrentFormat}
+      self.mc[self.allTabName] or false
+  local arguments = { text, commands, hints, useCurrentFormat }
   if self.timestamp then
     local colorString = ""
     if self.customTimestampColor then
@@ -2122,7 +2141,8 @@ function EMCO:validTabNameOrError(tabName, funcName)
   if tabNameType ~= "string" then
     ae(funcName, "tabName as string expected, got " .. tabNameType)
   elseif not validTabName then
-    ae(funcName, string.format("tabName %s does not exist in this EMCO. valid tabs: " .. table.concat(self.consoles, ",")))
+    ae(funcName,
+      string.format("tabName %s does not exist in this EMCO. valid tabs: " .. table.concat(self.consoles, ",")))
   end
 end
 
@@ -2257,7 +2277,8 @@ function EMCO:load()
   if io.exists(filename) then
     table.load(filename, configTable)
   else
-    debugc(string.format("Attempted to load config for EMCO named %s but the file could not be found. Filename: %s", self.name, filename))
+    debugc(string.format("Attempted to load config for EMCO named %s but the file could not be found. Filename: %s",
+      self.name, filename))
     return
   end
 
@@ -2335,7 +2356,7 @@ end
 function EMCO:enableTabLogging(tabName)
   local console = self.mc[tabName]
   if not console then
-    debugc(f"EMCO:enableTabLogging(tabName): tabName {tabName} not found.")
+    debugc(f "EMCO:enableTabLogging(tabName): tabName {tabName} not found.")
     return
   end
   console.log = true
@@ -2348,7 +2369,7 @@ end
 function EMCO:disableTabLogging(tabName)
   local console = self.mc[tabName]
   if not console then
-    debugc(f"EMCO:disableTabLogging(tabName): tabName {tabName} not found.")
+    debugc(f "EMCO:disableTabLogging(tabName): tabName {tabName} not found.")
     return
   end
   console.log = false
@@ -2358,7 +2379,7 @@ end
 
 --- Enables logging on all EMCO managed consoles
 function EMCO:enableAllLogging()
-  for _,console in pairs(self.mc) do
+  for _, console in pairs(self.mc) do
     console.log = true
   end
   self.logExclusions = {}
@@ -2367,9 +2388,9 @@ end
 --- Disables logging on all EMCO managed consoles
 function EMCO:disableAllLogging()
   self.logExclusions = {}
-  for tabName,console in pairs(self.mc) do
+  for tabName, console in pairs(self.mc) do
     console.log = false
-    self.logExclusions[#self.logExclusions+1] = tabName
+    self.logExclusions[#self.logExclusions + 1] = tabName
   end
 end
 

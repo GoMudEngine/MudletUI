@@ -6,8 +6,8 @@ function ui.updateInvDisplay()
 
   ui.eqDisplay:clear("Inventory")
 
-  ui.eqDisplay:cecho("Inventory","<cyan>R/C to look, drop or wear")
-  ui.eqDisplay:cecho("Inventory","\n\n")
+  ui.eqDisplay:cecho("Inventory", "<cyan>R/C to look, drop or wear")
+  ui.eqDisplay:cecho("Inventory", "\n\n")
 
   local backpackItems = gmcp.Char.Inventory.Backpack.items
 

@@ -1,37 +1,35 @@
 ui = ui or {}
 ui.packageName = "GoMudUI"
 
-ui.downloadFolder = getMudletHomeDir().."/"..ui.packageName.."/ui_updater/"
+ui.downloadFolder = getMudletHomeDir() .. "/" .. ui.packageName .. "/ui_updater/"
 -- Install the new UI
 function ui.installGoMudUI()
-  
-    ui.displayUIMessage("Now installing version <sky_blue>"..ui.versionNew.."<reset> of GoMud UI")
-  
-    ui.isUpdating = true
-    uninstallPackage("GoMudUI")
-    ui.postInstallDone = false
-    ui.firstRun = true
-    installPackage("https://github.com/GoMudEngine/MudletUI/releases/latest/download/GoMudUI.mpackage")
-end
+  ui.displayUIMessage("Now installing version <sky_blue>" .. ui.versionNew .. "<reset> of GoMud UI")
 
+  ui.isUpdating = true
+  uninstallPackage("GoMudUI")
+  ui.postInstallDone = false
+  ui.firstRun = true
+  installPackage("https://github.com/GoMudEngine/MudletUI/releases/latest/download/GoMudUI.mpackage")
+end
 
 -- This function is running on a timer and also every time the client starts.
 function ui.checkForUpdate()
   if not lfs.attributes(ui.downloadFolder) then
-      if lfs and lfs.mkdir then
-        local t, s = lfs.mkdir(ui.downloadFolder)
-        if not t and s ~= "File exists" then
-          echo("Could not make the '" .. ui.downloadFolder .. "' folder; " .. s)
-          return
-        end
-      else
-        echo(
-          "Sorry, but you need LuaFileSystem (lfs) installed, or have the '" ..
-          ui.downloadFolder ..
-          "' folder exist."
-        )
+    if lfs and lfs.mkdir then
+      local t, s = lfs.mkdir(ui.downloadFolder)
+      if not t and s ~= "File exists" then
+        echo("Could not make the '" .. ui.downloadFolder .. "' folder; " .. s)
         return
       end
+    else
+      echo(
+        "Sorry, but you need LuaFileSystem (lfs) installed, or have the '" ..
+        ui.downloadFolder ..
+        "' folder exist."
+      )
+      return
+    end
   end
   ui.gomudUIVersionFile = ui.downloadFolder .. "version"
   downloadFile(ui.gomudUIVersionFile, "https://github.com/GoMudEngine/MudletUI/releases/latest/download/version.txt")
@@ -44,39 +42,42 @@ function ui.fetchChangeLog()
 end
 
 function ui.fileDownloadedSuccess(_, filename)
-       
   if not io.exists(filename) then return end
-  
+
   -- Show the version and let the user know if they are behind
   if filename == tostring(ui.gomudUIVersionFile) then
     --ui.displayUIMessage("File downloaded: "..filename)
     local file, content = io.open(filename)
-    if file then content = file:read("*l"):trim(); io.close(file) end
-    
+    if file then
+      content = file:read("*l"):trim(); io.close(file)
+    end
+
     if ui.compare_versions(content, ui.version) then
       ui.versionNew = content
       ui.versionBehind = ui.versions_behind(ui.versionNew, ui.version)
-      
-      ui.displayUIMessage("<magenta>Update found: <sky_blue>"..ui.version.."<reset> -> <spring_green>"..ui.versionNew)
-      ui.displayUIMessage("You are <orange>"..ui.versionBehind.."<reset> version(s) behind")
+
+      ui.displayUIMessage("<magenta>Update found: <sky_blue>" .. ui.version .. "<reset> -> <spring_green>" ..
+      ui.versionNew)
+      ui.displayUIMessage("You are <orange>" .. ui.versionBehind .. "<reset> version(s) behind")
       ui.fetchChangeLog()
       ui.displayUIMessage("Use the in game command <ui install> to update")
     elseif ui.manualUpdate then
       echo("\n")
-      ui.displayUIMessage("<magenta>No update found. You are on version: <sky_blue>"..ui.version.."\n")
+      ui.displayUIMessage("<magenta>No update found. You are on version: <sky_blue>" .. ui.version .. "\n")
       ui.manualUpdate = false
     end
-    
   end
-  
+
   -- If the changelog was downloaded, show what was changed
   if filename == tostring(ui.gomudUIChangelogFile) then
     --ui.displayUIMessage("File downloaded: "..filename)
     local file, content = io.open(filename)
-    if file then content = file:read("*a"); io.close(file) end
-      
+    if file then
+      content = file:read("*a"); io.close(file)
+    end
+
     -- Shamelessly stolen from the IRE mapper package
-    
+
     -- make environment
     local env = {} -- add functions you know are safe here
     -- run code under environment [Lua 5.1]
@@ -89,18 +90,20 @@ function ui.fileDownloadedSuccess(_, filename)
     end
     run(content)
     -- Stealing from IRE over :)
-    
+
     ui.gomudUIChangelog = env.changelog
     ui.displayUIMessage("<grey>Lastes GoMud UI update:<DarkSeaGreen>")
-    cechoLink(" <dodger_blue><u>Show the full changelog</u>", [[ui.gomudUIShowFullChangelog()]], "Click to see the full changelog", true)
-    cecho("<DarkSeaGreen> \n\n"..ui.gomudUIChangelog[#ui.gomudUIChangelog])
-    cechoLink("\n\n<green>### <gold>GoMud UI <white>: <dodger_blue><u>Click here to update to the latest version!</u>\n", [[ui.installGoMudUI()]], "Install new version of GoMud UI", true)
+    cechoLink(" <dodger_blue><u>Show the full changelog</u>", [[ui.gomudUIShowFullChangelog()]],
+      "Click to see the full changelog", true)
+    cecho("<DarkSeaGreen> \n\n" .. ui.gomudUIChangelog[#ui.gomudUIChangelog])
+    cechoLink("\n\n<green>### <gold>GoMud UI <white>: <dodger_blue><u>Click here to update to the latest version!</u>\n",
+      [[ui.installGoMudUI()]], "Install new version of GoMud UI", true)
     ui.displayUIMessage("Or use the command <green>ui update ui<grey> to update.")
   end
 
   if filename == tostring(ui.gomudMapFile) then
     ui.displayUIMessage("Map downloaded, now loading")
-    loadMap(getMudletHomeDir().."gomud.dat")
+    loadMap(getMudletHomeDir() .. "gomud.dat")
     ui.displayUIMessage("Map loaded")
   end
 end
@@ -112,5 +115,5 @@ function ui.gomudUIShowFullChangelog()
 end
 
 function ui.fileDownloadedError(...)
-  debugc{...}
+  debugc { ... }
 end

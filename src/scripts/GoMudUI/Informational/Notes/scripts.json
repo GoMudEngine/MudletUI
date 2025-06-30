@@ -1,8 +1,8 @@
 [
-       {
-              "name": "Save room notes",
-              "isActive": "yes",
-              "script": "",
-              "isFolder": "no"
-       }
+  {
+    "name": "Save room notes",
+    "isActive": "yes",
+    "script": "",
+    "isFolder": "no"
+  }
 ]

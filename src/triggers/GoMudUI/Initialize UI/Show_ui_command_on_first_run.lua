@@ -1,4 +1,4 @@
 if ui.firstRun then
-    expandAlias("ui", false)
-    ui.firstRun = false
+  expandAlias("ui", false)
+  ui.firstRun = false
 end
