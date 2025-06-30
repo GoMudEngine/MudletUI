@@ -1,8 +1,7 @@
 local command = string.trim(matches[2])
 
 if command == "" then
-  cecho(
-    [[<sky_blue>
+    cecho([[<sky_blue>
                         ****    Welcome to the GoMud Mudlet UI    ****
 
   <grey>This is a work in progress, developed by Morquin inspired by Durd of Asteria.
@@ -29,43 +28,52 @@ if command == "" then
   <OliveDrab> ui reset layout           <grey>Reset the UI back to initial layout
   <OliveDrab> ui containers             <grey>Show and manage all the UI containers
   <OliveDrab> ui debug                  <grey>Show some UI debug info
-  ]]
-  )
+  ]])
 elseif command == "debug" then
-  ui.showDebug()
+    ui.showDebug()
 elseif command == "reset" then
-  if matches[3] == "settings" then
-    ui.createSettings()
-    ui.displayUIMessage("Default settings loaded")
-  elseif matches[3] == "layout" then
-    ui.createContainers("reset")
-    ui.displayUIMessage("Default layout loaded")
-  end
+    if matches[3] == "settings" then
+        ui.createSettings()
+        ui.displayUIMessage("Default settings loaded")
+    elseif matches[3] == "layout" then
+        ui.createContainers("reset")
+        ui.displayUIMessage("Default layout loaded")
+    end
 elseif command == "exploration" then
-  ui.showMapExpLevel()
+    ui.showMapExpLevel()
 elseif command == "note" then
-  ui.saveRoomNotes(matches[3])
+    ui.saveRoomNotes(matches[3])
 elseif command == "update" then
-  if matches[3] == "layout" then
-    ui.createContainers("layout_update")
-  end
-  if matches[3] == "ui" then
-    ui.installGoMudUI()
-  end
+    if matches[3] == "layout" then
+        ui.createContainers("layout_update")
+    end
+    if matches[3] == "ui" then
+        ui.installGoMudUI()
+    end
 elseif command == "check" then
-  ui.manualUpdate = true
-  ui.checkForUpdate()
+    ui.manualUpdate = true
+    ui.checkForUpdate()
 elseif command == "color" then
-  cecho("\n <YellowGreen>Choose which item you want to change color on, \n then click on a color name to change to\n\n")
-  echo("\n")
-  cechoLink(" <wheat>Change the: <SteelBlue><u>Active tab color</u>",
-    [[displayColors({justText = true, uiSetting = "activeTabBGColor"})]], "Change the Active Tab color", true)
-  echo("\n")
-  cechoLink(" <wheat>Change the: <SteelBlue><u>Inactive tab color</u>",
-    [[displayColors({justText = true, uiSetting = "inactiveTabBGColor"})]], "Change the Inctive Tab color", true)
-  echo("\n")
+    cecho(
+        "\n <YellowGreen>Choose which item you want to change color on, \n then click on a color name to change to\n\n"
+    )
+    echo("\n")
+    cechoLink(
+        " <wheat>Change the: <SteelBlue><u>Active tab color</u>",
+        [[displayColors({justText = true, uiSetting = "activeTabBGColor"})]],
+        "Change the Active Tab color",
+        true
+    )
+    echo("\n")
+    cechoLink(
+        " <wheat>Change the: <SteelBlue><u>Inactive tab color</u>",
+        [[displayColors({justText = true, uiSetting = "inactiveTabBGColor"})]],
+        "Change the Inctive Tab color",
+        true
+    )
+    echo("\n")
 elseif command == "containers" then
-  ui.showContainerState()
+    ui.showContainerState()
 else
-  ui.displayUIMessage("Unknown command option <white>" .. command .. "<reset>")
+    ui.displayUIMessage("Unknown command option <white>" .. command .. "<reset>")
 end
