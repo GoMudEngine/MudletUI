@@ -4,4 +4,5 @@ changelog ={
 [[v1.0.2: Eq and Inventory done. Room windows almost done. Connection timer in top bar. Affects are done.]],
 [[v1.0.3: Fixed communication pane, added proper login time.]],
 [[v1.0.4: Added support for game engine commands (remove and update). Fixed blank mapper display. Fixed minor annoyance with channels]],
+[[v1.0.5: New font - FiraMono Nerd Font Mono - for better compatibility with GoMud]],
 }
