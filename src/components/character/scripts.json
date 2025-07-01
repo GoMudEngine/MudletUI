@@ -1,26 +1,26 @@
 [
     {
-        "name": "Core",
+        "name": "Character Display",
         "isActive": "yes",
         "script": "",
-        "isFolder": "yes"
+        "isFolder": "no"
     },
     {
-        "name": "Components",
+        "name": "Who Display",
         "isActive": "yes",
         "script": "",
-        "isFolder": "yes"
+        "isFolder": "no"
     },
     {
-        "name": "Features",
+        "name": "Affects Display",
         "isActive": "yes",
         "script": "",
-        "isFolder": "yes"
+        "isFolder": "no"
     },
     {
-        "name": "Developer",
+        "name": "Group Display",
         "isActive": "yes",
         "script": "",
-        "isFolder": "yes"
+        "isFolder": "no"
     }
 ]

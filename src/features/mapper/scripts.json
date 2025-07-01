@@ -1,36 +1,42 @@
 [
     {
-        "name": "Color Map",
+        "name": "Show Map Exploration Level",
         "isActive": "yes",
         "script": "",
         "isFolder": "no"
     },
     {
-        "name": "Utility Functions",
+        "name": "Save Room Notes",
         "isActive": "yes",
         "script": "",
         "isFolder": "no"
     },
     {
-        "name": "Style Config",
+        "name": "Identify Visited Rooms",
         "isActive": "yes",
         "script": "",
         "isFolder": "no"
     },
     {
-        "name": "Gauge Manager",
+        "name": "Highlight Unvisited Rooms In Area",
         "isActive": "yes",
         "script": "",
         "isFolder": "no"
     },
     {
-        "name": "Autoupdater",
+        "name": "Mark Area Not Visited",
         "isActive": "yes",
         "script": "",
         "isFolder": "no"
     },
     {
-        "name": "Settings Handler",
+        "name": "Mark Area Visited",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "no"
+    },
+    {
+        "name": "Show Unvisited Rooms In Area",
         "isActive": "yes",
         "script": "",
         "isFolder": "no"

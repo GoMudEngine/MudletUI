@@ -1,18 +1,12 @@
 [
     {
-        "name": "Color Map",
+        "name": "Create Containers",
         "isActive": "yes",
         "script": "",
         "isFolder": "no"
     },
     {
-        "name": "Utility Functions",
-        "isActive": "yes",
-        "script": "",
-        "isFolder": "no"
-    },
-    {
-        "name": "Style Config",
+        "name": "Container Functions",
         "isActive": "yes",
         "script": "",
         "isFolder": "no"
@@ -24,13 +18,19 @@
         "isFolder": "no"
     },
     {
+        "name": "Create Player Gauges",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "no"
+    },
+    {
         "name": "Autoupdater",
         "isActive": "yes",
         "script": "",
         "isFolder": "no"
     },
     {
-        "name": "Settings Handler",
+        "name": "Update All Displays",
         "isActive": "yes",
         "script": "",
         "isFolder": "no"

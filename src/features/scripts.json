@@ -1,0 +1,14 @@
+[
+    {
+        "name": "Mapper",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "yes"
+    },
+    {
+        "name": "Settings",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "yes"
+    }
+]

@@ -1,26 +1,26 @@
 [
     {
-        "name": "Core",
+        "name": "Prompt Display",
         "isActive": "yes",
         "script": "",
-        "isFolder": "yes"
+        "isFolder": "no"
     },
     {
-        "name": "Components",
+        "name": "Prompt Right Display",
         "isActive": "yes",
         "script": "",
-        "isFolder": "yes"
+        "isFolder": "no"
     },
     {
-        "name": "Features",
+        "name": "Top Bar Display",
         "isActive": "yes",
         "script": "",
-        "isFolder": "yes"
+        "isFolder": "no"
     },
     {
-        "name": "Developer",
+        "name": "Player Gauges",
         "isActive": "yes",
         "script": "",
-        "isFolder": "yes"
+        "isFolder": "no"
     }
 ]

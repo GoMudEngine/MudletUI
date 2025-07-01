@@ -1345,18 +1345,15 @@ function TableMaker:makeTitle(totalWidth, header)
 	if not self.printTitle then
 		return ""
 	end
-	local title = ftext.fText(
-		self.title,
-		{
-			width = totalWidth,
-			alignment = "center",
-			cap = self.headCharacter,
-			capColor = self.frameColor,
-			inside = true,
-			textColor = self.titleColor,
-			formatType = self.formatType,
-		}
-	)
+	local title = ftext.fText(self.title, {
+		width = totalWidth,
+		alignment = "center",
+		cap = self.headCharacter,
+		capColor = self.frameColor,
+		inside = true,
+		textColor = self.titleColor,
+		formatType = self.formatType,
+	})
 	title = string.format("\n%s\n%s", title, header)
 	return title
 end

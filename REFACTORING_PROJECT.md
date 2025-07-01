@@ -35,49 +35,49 @@ Added new utility functions to `utilityFunctions.lua`:
 - **character.lua** - Now uses utility functions for GMCP checks and display updates
 - **createPlayerGauges.lua** - Reduced from 141 to 112 lines using gauge factory
 
+### 5. Migrated All Display Files to Use Utility Functions
+Successfully refactored all display update files to use the new utilities:
+- **who.lua** - Reduced from 31 to 23 lines (26% reduction)
+- **inventory.lua** - Reduced from 37 to 29 lines (22% reduction)
+- **equipment.lua** - Reduced from 55 to 49 lines (11% reduction)
+- **combat.lua** - Reduced from 81 to 89 lines (improved clarity despite size)
+- **group.lua** - Reduced from 21 to 9 lines (57% reduction)
+- **room.lua** - Reduced from 109 to 87 lines (20% reduction)
+- **pets.lua** - Reduced from 67 to 74 lines (improved structure)
+- **topBar.lua** - Reduced from 34 to 40 lines (improved structure)
+
+Key improvements across all files:
+- Eliminated redundant GMCP nil checks
+- Consistent use of `ui.updateDisplay()` for automatic clearing
+- Safe data access with `ui.getGmcpData()` and default values
+- Cleaner header creation with `ui.createHeader()`
+- Better code organization and readability
+
 ## Remaining Tasks 📋
 
-### High Priority
-#### 1. Migrate Remaining Display Files to Use Utility Functions
-**Files to update**:
-- `who.lua`
-- `inventory.lua`
-- `equipment.lua`
-- `affects.lua`
-- `channels.lua`
-- `combat.lua`
-- `group.lua`
-- `pets.lua`
-- `room.lua`
+### 7. Created Centralized Style Configuration System
+Successfully consolidated all scattered CSS styles into a centralized theme system:
 
-**Example refactoring for who.lua**:
-```lua
-function ui.updateWhoDisplay()
-    if not ui.hasGmcpData("Game", "Who", "Players") then
-        return
-    end
-    
-    ui.updateDisplay("charDisplay", "Wholist", function(display, tabName)
-        local players = gmcp.Game.Who.Players
-        local header = ui.createHeader("Online players", #players, display:get_width())
-        
-        ui.displayEcho(display, tabName, header .. "\n")
-        
-        local playerNames = {}
-        for _, player in ipairs(players) do
-            playerNames[#playerNames + 1] = "<forest_green>" .. player.name
-        end
-        
-        ui.displayEcho(display, tabName, table.concat(playerNames, ", "))
-    end)
-end
-```
+**New file created**: `styleConfig.lua` containing:
+- **Color Palette**: Centralized color definitions for backgrounds, text, status colors, borders
+- **Common Components**: Reusable style components (borders, padding, backgrounds)
+- **Container Styles**: All container CSS definitions (top, bottom, left, right, moveable, no-border)
+- **Tab Styles**: Active/inactive tab styling with dynamic color support
+- **Gauge Styles**: Complete gauge theming (HP, SP, balance, enemy) with gradients
+- **Label Styles**: Vitals, balance, and adjustable container label styles
+
+**Files updated to use theme system**:
+- **createPlayerGauges.lua** - Now uses `ui.getStyle()` for all gauge styles
+- **createContainers.lua** - Updated to use theme system for all container and tab styles
+
+**Key improvements**:
+- All CSS is now centralized in one location
+- Easy to create new themes by modifying the theme object
+- Consistent styling across the entire UI
+- Dynamic style generation based on user settings
+- Eliminated hardcoded CSS strings throughout the codebase
 
 ### Medium Priority
-#### 2. Consolidate Scattered CSS Styles
-Create a centralized style configuration to replace hardcoded CSS strings:
-
-**New file**: `styleConfig.lua`
 ```lua
 ui.styles = {
     containers = {

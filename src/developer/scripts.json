@@ -1,0 +1,14 @@
+[
+    {
+        "name": "Developer Tools",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "no"
+    },
+    {
+        "name": "Dev Command Handler",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "no"
+    }
+]

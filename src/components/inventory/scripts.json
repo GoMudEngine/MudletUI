@@ -1,0 +1,20 @@
+[
+    {
+        "name": "Equipment Display",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "no"
+    },
+    {
+        "name": "Inventory Display",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "no"
+    },
+    {
+        "name": "Pets Display",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "no"
+    }
+]

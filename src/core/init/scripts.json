@@ -1,0 +1,20 @@
+[
+    {
+        "name": "Event Handlers",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "no"
+    },
+    {
+        "name": "UI Settings",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "no"
+    },
+    {
+        "name": "Install Login Exit",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "no"
+    }
+]

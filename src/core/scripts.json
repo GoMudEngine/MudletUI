@@ -1,24 +1,24 @@
 [
     {
-        "name": "Core",
+        "name": "Init",
         "isActive": "yes",
         "script": "",
         "isFolder": "yes"
     },
     {
-        "name": "Components",
+        "name": "Utilities",
         "isActive": "yes",
         "script": "",
         "isFolder": "yes"
     },
     {
-        "name": "Features",
+        "name": "Config",
         "isActive": "yes",
         "script": "",
         "isFolder": "yes"
     },
     {
-        "name": "Developer",
+        "name": "Infrastructure",
         "isActive": "yes",
         "script": "",
         "isFolder": "yes"

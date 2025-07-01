@@ -1,24 +1,36 @@
 [
     {
-        "name": "Core",
+        "name": "Character",
         "isActive": "yes",
         "script": "",
         "isFolder": "yes"
     },
     {
-        "name": "Components",
+        "name": "Inventory",
         "isActive": "yes",
         "script": "",
         "isFolder": "yes"
     },
     {
-        "name": "Features",
+        "name": "Communication",
         "isActive": "yes",
         "script": "",
         "isFolder": "yes"
     },
     {
-        "name": "Developer",
+        "name": "Combat",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "yes"
+    },
+    {
+        "name": "Rooms",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "yes"
+    },
+    {
+        "name": "UI",
         "isActive": "yes",
         "script": "",
         "isFolder": "yes"
