@@ -1,8 +1,8 @@
 [
     {
-        "name": "GoMudUI",
+        "name": "settingsDisplay",
         "isActive": "yes",
         "script": "",
-        "isFolder": "yes"
+        "isFolder": "no"
     }
 ]

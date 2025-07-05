@@ -1,26 +1,26 @@
 [
     {
-        "name": "Core",
+        "name": "promptDisplay",
         "isActive": "yes",
         "script": "",
-        "isFolder": "yes"
+        "isFolder": "no"
     },
     {
-        "name": "Components",
+        "name": "promptRightDisplay",
         "isActive": "yes",
         "script": "",
-        "isFolder": "yes"
+        "isFolder": "no"
     },
     {
-        "name": "Features",
+        "name": "topBarDisplay",
         "isActive": "yes",
         "script": "",
-        "isFolder": "yes"
+        "isFolder": "no"
     },
     {
-        "name": "Developer",
+        "name": "playerGauges",
         "isActive": "yes",
         "script": "",
-        "isFolder": "yes"
+        "isFolder": "no"
     }
 ]

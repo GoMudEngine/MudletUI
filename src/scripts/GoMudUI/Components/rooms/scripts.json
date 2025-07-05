@@ -1,8 +1,8 @@
 [
     {
-        "name": "GoMudUI",
+        "name": "roomDisplay",
         "isActive": "yes",
         "script": "",
-        "isFolder": "yes"
+        "isFolder": "no"
     }
 ]

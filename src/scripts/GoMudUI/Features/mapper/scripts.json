@@ -1,0 +1,44 @@
+[
+    {
+        "name": "showMapExplorationLevel",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "no"
+    },
+    {
+        "name": "saveRoomNotes",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "no"
+    },
+    {
+        "name": "identifyVisitedRooms",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "no"
+    },
+    {
+        "name": "highlightUnvisitedRoomsInArea",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "no"
+    },
+    {
+        "name": "markAreaNotVisited",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "no"
+    },
+    {
+        "name": "markAreaVisited",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "no"
+    },
+    {
+        "name": "showUnvisitedRoomsInArea",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "no"
+    }
+]

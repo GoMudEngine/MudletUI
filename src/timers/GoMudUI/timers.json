@@ -1,6 +1,6 @@
 [
     {
-        "name": "Check for UI updates",
+        "name": "Check_for_UI_updates",
         "isActive": "yes",
         "command": "",
         "hours": "1",
@@ -10,7 +10,7 @@
         "script": "ui.checkForUpdate()"
     },
     {
-        "name": "Update top bar",
+        "name": "Update_top_bar",
         "isActive": "yes",
         "command": "",
         "hours": "0",

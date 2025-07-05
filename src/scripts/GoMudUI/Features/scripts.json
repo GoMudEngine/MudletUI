@@ -1,15 +1,14 @@
 [
     {
-        "name": "Core",
+        "name": "mapper",
         "isActive": "yes",
         "script": "",
         "isFolder": "yes"
     },
     {
-        "name": "ui_main_alias",
+        "name": "settings",
         "isActive": "yes",
-        "regex": "^ui\\s?(\\w+)?\\s?(.*)?$",
         "script": "",
-        "isFolder": "no"
+        "isFolder": "yes"
     }
 ]

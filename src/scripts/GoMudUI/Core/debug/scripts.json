@@ -1,14 +1,13 @@
 [
     {
-        "name": "Core",
+        "name": "gmcpMonitor",
         "isActive": "yes",
         "script": "",
-        "isFolder": "yes"
+        "isFolder": "no"
     },
     {
-        "name": "ui_main_alias",
+        "name": "debugCommands",
         "isActive": "yes",
-        "regex": "^ui\\s?(\\w+)?\\s?(.*)?$",
         "script": "",
         "isFolder": "no"
     }

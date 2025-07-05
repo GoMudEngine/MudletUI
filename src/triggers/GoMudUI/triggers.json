@@ -1,1 +1,26 @@
-null
+[
+    {
+        "name": "Core",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "yes"
+    },
+    {
+        "name": "Features",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "yes"
+    },
+    {
+        "name": "Initialize_UI",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "yes"
+    },
+    {
+        "name": "Main_Display_Gagging",
+        "isActive": "yes",
+        "script": "",
+        "isFolder": "yes"
+    }
+]

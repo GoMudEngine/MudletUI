@@ -1,14 +1,13 @@
 [
     {
-        "name": "Core",
+        "name": "developerTools",
         "isActive": "yes",
         "script": "",
-        "isFolder": "yes"
+        "isFolder": "no"
     },
     {
-        "name": "ui_main_alias",
+        "name": "devCommandHandler",
         "isActive": "yes",
-        "regex": "^ui\\s?(\\w+)?\\s?(.*)?$",
         "script": "",
         "isFolder": "no"
     }
