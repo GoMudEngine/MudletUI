@@ -9,7 +9,7 @@ function ui.updateCharDisplay()
   local race = ui.titleCase(gmcp.Char.Info.race) or "None"
   local class = ui.titleCase(gmcp.Char.Info.class) or "None"
   local alignment = ui.titleCase(gmcp.Char.Info.alignment) or "None"
-  local level = gmcp.Char.Info.level or 1
+  local level = tonumber(gmcp.Char.Info.level) or 1
   
   -- Clear and update display
   ui.charDisplay:clear("Character")
@@ -48,15 +48,15 @@ function ui.updateCharDisplay()
     ui.charDisplay:cecho("Character", "\n\n")
     
     -- Stats display (paired for better layout)
-    ui.charDisplay:cecho("Character", "<SkyBlue>Mysticism<white>: <gold>"..string.format("%2d", gmcp.Char.Stats.mysticism or 0))
-    ui.charDisplay:cecho("Character", "    <SkyBlue>Perception<white>:    <gold>"..string.format("%2d", gmcp.Char.Stats.perception or 0))
+    ui.charDisplay:cecho("Character", "<SkyBlue>Mysticism<white>: <gold>"..string.format("%2d", tonumber(gmcp.Char.Stats.mysticism) or 0))
+    ui.charDisplay:cecho("Character", "    <SkyBlue>Perception<white>:    <gold>"..string.format("%2d", tonumber(gmcp.Char.Stats.perception) or 0))
     ui.charDisplay:cecho("Character", "\n")
     
-    ui.charDisplay:cecho("Character", "<SkyBlue>Smarts<white>:    <gold>"..string.format("%2d", gmcp.Char.Stats.smarts or 0))
-    ui.charDisplay:cecho("Character", "    <SkyBlue>Speed<white>:         <gold>"..string.format("%2d", gmcp.Char.Stats.speed or 0))
+    ui.charDisplay:cecho("Character", "<SkyBlue>Smarts<white>:    <gold>"..string.format("%2d", tonumber(gmcp.Char.Stats.smarts) or 0))
+    ui.charDisplay:cecho("Character", "    <SkyBlue>Speed<white>:         <gold>"..string.format("%2d", tonumber(gmcp.Char.Stats.speed) or 0))
     ui.charDisplay:cecho("Character", "\n")
     
-    ui.charDisplay:cecho("Character", "<SkyBlue>Strength<white>:  <gold>"..string.format("%2d", gmcp.Char.Stats.strength or 0))
-    ui.charDisplay:cecho("Character", "    <SkyBlue>Vitality<white>:      <gold>"..string.format("%2d", gmcp.Char.Stats.vitality or 0))
+    ui.charDisplay:cecho("Character", "<SkyBlue>Strength<white>:  <gold>"..string.format("%2d", tonumber(gmcp.Char.Stats.strength) or 0))
+    ui.charDisplay:cecho("Character", "    <SkyBlue>Vitality<white>:      <gold>"..string.format("%2d", tonumber(gmcp.Char.Stats.vitality) or 0))
   end
 end

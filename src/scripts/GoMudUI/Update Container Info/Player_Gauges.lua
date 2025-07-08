@@ -7,10 +7,10 @@ function ui.updatePlayerGauges()
   
   --If gmcp information is availabe set the values, otherwise use dummy values.
   if gmcp.Char.Vitals then
-    hp = gmcp.Char.Vitals.hp or 0
-    hp_max = gmcp.Char.Vitals.hp_max or 0
-    sp = gmcp.Char.Vitals.sp or 0
-    sp_max = gmcp.Char.Vitals.sp_max or 0
+    hp = tonumber(gmcp.Char.Vitals.hp) or 0
+    hp_max = tonumber(gmcp.Char.Vitals.hp_max) or 0
+    sp = tonumber(gmcp.Char.Vitals.sp) or 0
+    sp_max = tonumber(gmcp.Char.Vitals.sp_max) or 0
   
     -- Update health
     ui.hpGauge:setValue(hp, hp_max, f"<center>{hp}/{hp_max}</center>")

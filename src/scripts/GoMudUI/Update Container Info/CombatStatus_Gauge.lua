@@ -4,8 +4,8 @@ function ui.updateCombatStatusGauge()
     return
   end
   --If gmcp information is availabe set the values, otherwise use dummy values.
-  local cooldown = gmcp.Char.CombatStatus.cooldown or 0
-  local maxcooldown = gmcp.Char.CombatStatus.max_cooldown or 0
+  local cooldown = tonumber(gmcp.Char.CombatStatus.cooldown) or 0
+  local maxcooldown = tonumber(gmcp.Char.CombatStatus.max_cooldown) or 0
   local cooldownNameIdle = gmcp.Char.CombatStatus.name_idle
   local cooldownNameActive = gmcp.Char.CombatStatus.name_active
 

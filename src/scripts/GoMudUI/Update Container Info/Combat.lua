@@ -20,7 +20,9 @@ function ui.updateCombatDisplay()
       if k == 1 then 
       table.insert(hostileGuid, v.guid)
       ui.roomDisplay:cecho("Combat", "<grey>Target<white>:\n")
-      ui.roomDisplay:cecho("Combat", "<red>"..v.name..string.rep(" ", 35-string.len(v.name)-string.len(tostring(v.hp))-string.len(tostring(v.maxhp))).."<gold>"..v.hp.."<white>/<gold>"..v.maxhp.."\n")
+      local hp = tonumber(v.hp) or 0
+      local maxhp = tonumber(v.maxhp) or 1
+      ui.roomDisplay:cecho("Combat", "<red>"..v.name..string.rep(" ", 35-string.len(v.name)-string.len(tostring(hp))-string.len(tostring(maxhp))).."<gold>"..hp.."<white>/<gold>"..maxhp.."\n")
       end
     end
     
@@ -28,7 +30,9 @@ function ui.updateCombatDisplay()
       if k > 1 then 
       table.insert(hostileGuid, v.guid)
       ui.roomDisplay:cecho("Combat", "\n<grey>Hostiles<white>:\n")
-      ui.roomDisplay:cecho("Combat", "<red>"..v.name..string.rep(" ", 35-string.len(v.name)-string.len(tostring(v.hp))-string.len(tostring(v.maxhp))).."<gold>"..v.hp.."<white>/<gold>"..v.maxhp.."\n")
+      local hp = tonumber(v.hp) or 0
+      local maxhp = tonumber(v.maxhp) or 1
+      ui.roomDisplay:cecho("Combat", "<red>"..v.name..string.rep(" ", 35-string.len(v.name)-string.len(tostring(hp))-string.len(tostring(maxhp))).."<gold>"..hp.."<white>/<gold>"..maxhp.."\n")
       end
     end
     

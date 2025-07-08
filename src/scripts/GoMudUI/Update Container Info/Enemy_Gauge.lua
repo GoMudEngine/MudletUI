@@ -10,12 +10,12 @@ function ui.updateEnemyGauge()
     ui.enemyGauge.front:setStyleSheet(f[[{ui.settings.cssFont} background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(150, 25, 25), stop: 0.1 rgb(180,0,0), stop: 0.85 rgb(155,0,0), stop: 1 rgb(130,0,0));border-radius: 3px;border: 1px solid rgba(160, 160, 160, 50%);]]) 
     
     if 1 > 2 then
-      ui.enemyGauge:setValue(gmcp.Char.Enemies[1].hp, gmcp.Char.Enemies[1].maxhp, f"<center>"..gmcp.Char.Enemies[1].name.."</center>")
+      ui.enemyGauge:setValue(tonumber(gmcp.Char.Enemies[1].hp) or 0, tonumber(gmcp.Char.Enemies[1].maxhp) or 1, f"<center>"..gmcp.Char.Enemies[1].name.."</center>")
       else 
-      ui.enemyGauge:setValue(gmcp.Char.Enemies[1].hp, gmcp.Char.Enemies[1].maxhp, f"")
+      ui.enemyGauge:setValue(tonumber(gmcp.Char.Enemies[1].hp) or 0, tonumber(gmcp.Char.Enemies[1].maxhp) or 1, f"")
     end
 
-    ui.enemyLabel:echo(gmcp.Char.Enemies[1].hp.."/"..gmcp.Char.Enemies[1].maxhp)
+    ui.enemyLabel:echo((tonumber(gmcp.Char.Enemies[1].hp) or 0).."/"..(tonumber(gmcp.Char.Enemies[1].maxhp) or 1))
   end
   if not gmcp.Char.Enemies[1] then
     ui.enemyGauge.front:setStyleSheet(f[[{ui.settings.cssFont} background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(100, 25, 25), stop: 0.1 rgb(120,0,0), stop: 0.85 rgb(105,0,0), stop: 1 rgb(80,0,0));border-radius: 3px;border: 1px solid rgba(160, 160, 160, 50%);]])

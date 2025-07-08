@@ -26,7 +26,7 @@ function ui.updateRoomDisplay()
     environment = room.Info.environment or "Unknown",
     area = room.Info.area or "Unknown Area",
     details = room.Info.details or {},
-    quest = room.Info.quest or 0,
+    quest = tonumber(room.Info.quest) or 0,
     queststatus = room.Info.queststatus or "Undiscovered",
     questname = room.Info.questname or "No Quest"
   }

@@ -12,19 +12,17 @@ function ui.updatePromptDisplay()
   --local spell, charge = "", ""
 
   if gmcp.Char.Worth then
-    xp    = gmcp.Char.Worth.xp or 0
-    xptnl = gmcp.Char.Worth.tnl or 0
-    xpPct = (xp / xptnl) * 100
+    xp    = tonumber(gmcp.Char.Worth.xp) or 0
+    xptnl = tonumber(gmcp.Char.Worth.tnl) or 0
+    xpPct = (xptnl > 0) and (xp / xptnl) * 100 or 0
     xpPctPretty = math.floor(xpPct + 0.5)
-    gold  = gmcp.Char.Worth.gold_carry or 0
-    bank  = gmcp.Char.Worth.gold_bank or 0
-    xpPct = (xp / xptnl) * 100
-    xpPctPretty = math.floor(xpPct + 0.5)
+    gold  = tonumber(gmcp.Char.Worth.gold_carry) or 0
+    bank  = tonumber(gmcp.Char.Worth.gold_bank) or 0
   end
   
   if gmcp.Char.Inventory and gmcp.Char.Inventory.Backpack then
-    carry    = gmcp.Char.Inventory.Backpack.count or 0
-    capacity = gmcp.Char.Inventory.Backpack.max or 0
+    carry    = tonumber(gmcp.Char.Inventory.Backpack.count) or 0
+    capacity = tonumber(gmcp.Char.Inventory.Backpack.max) or 0
   end
 
   local promptWidth = ui.mainWindowWidth / ui.consoleFontWidth
