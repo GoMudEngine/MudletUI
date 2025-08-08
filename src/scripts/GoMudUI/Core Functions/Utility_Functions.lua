@@ -53,8 +53,8 @@ end
 function ui.easyMapperStart()
     if not gmcp.Room or not gmcp.Room.Info then return end
     mmp.game = "gomud"
-    local areaName = ui.titleCase(string.gsub(gmcp.Room.Info.area or "", "_", " "))
-    local roomNum = gmcp.Room.Info.num or "0"
+    local areaName = ui.titleCase(string.gsub(ui.getRoomArea() or "", "_", " "))
+    local roomNum = ui.getRoomId() or "0"
     expandAlias("mc on")
     expandAlias("rlc v" .. roomNum .. " 0 0 0")
     expandAlias("area add " .. areaName)
@@ -101,9 +101,10 @@ end
 
 function ui.mapDownloaded()
     if not gmcp.Room or not gmcp.Room.Info then return end
-    if not centerview(gmcp.Room.Info.num) then
+    local roomId = ui.getRoomId()
+    if roomId and not centerview(roomId) then
         ui.displayUIMessage("Sorry, you are in room " ..
-            gmcp.Room.Info.num .. " which is not on the map so we cannot place you there.\n")
+            roomId .. " which is not on the map so we cannot place you there.\n")
     end
 end
 
@@ -156,14 +157,39 @@ end
 
 function ui.parseTimestamp(timestamp)
     if not timestamp then return nil end
-    local _, year, month, day, hour, min, sec = timestamp:match("(%w+), (%d+)-(%d+)-(%d+) (%d+):(%d+):(%d+)")
+    
+    -- Try parsing with AM/PM format first
+    -- Format: "Wednesday, 06-Aug-2025 2:08:55PM"
+    local _, day, month, year, hour, min, sec, ampm = timestamp:match("(%w+), (%d+)-(%w+)-(%d+) (%d+):(%d+):(%d+)(%u%u)")
+    
+    if not year then
+        -- Fall back to 24-hour format without AM/PM
+        _, day, month, year, hour, min, sec = timestamp:match("(%w+), (%d+)-(%w+)-(%d+) (%d+):(%d+):(%d+)")
+    end
 
     if not year or not month or not day or not hour or not min or not sec then
         return nil
     end
 
-    year, month, day = tonumber(year), tonumber(month), tonumber(day)
+    -- Convert month name to number if needed
+    local months = {Jan=1, Feb=2, Mar=3, Apr=4, May=5, Jun=6, Jul=7, Aug=8, Sep=9, Oct=10, Nov=11, Dec=12}
+    if type(month) == "string" and months[month] then
+        month = months[month]
+    else
+        month = tonumber(month)
+    end
+    
+    year, day = tonumber(year), tonumber(day)
     hour, min, sec = tonumber(hour), tonumber(min), tonumber(sec)
+    
+    -- Handle AM/PM conversion
+    if ampm then
+        if ampm == "PM" and hour ~= 12 then
+            hour = hour + 12
+        elseif ampm == "AM" and hour == 12 then
+            hour = 0
+        end
+    end
 
     return {
         year = year,
@@ -177,11 +203,35 @@ end
 
 function ui.getTimeElapsed(loginTimestamp)
     if not loginTimestamp then return "00H 00M 00S" end
-    local loginTime = ui.parseTimestamp(loginTimestamp)
-    if not loginTime then return "00H 00M 00S" end
-    local loginUnix = os.time(loginTime)
+    
+    local loginUnix
+    
+    -- Check if it's a number (epoch timestamp)
+    if type(loginTimestamp) == "number" and loginTimestamp > 0 then
+        loginUnix = loginTimestamp
+    elseif type(loginTimestamp) == "string" then
+        -- Parse the timestamp string
+        local loginTime = ui.parseTimestamp(loginTimestamp)
+        if not loginTime then 
+            return "00H 00M 00S" 
+        end
+        
+        loginUnix = os.time(loginTime)
+        if not loginUnix then
+            return "00H 00M 00S"
+        end
+    else
+        return "00H 00M 00S"
+    end
+    
     local currentUnix = os.time()
     local diffSeconds = currentUnix - loginUnix
+    
+    -- Ensure positive time difference
+    if diffSeconds < 0 then
+        diffSeconds = 0
+    end
+    
     local hours = math.floor(diffSeconds / 3600)
     local minutes = math.floor((diffSeconds % 3600) / 60)
     local seconds = diffSeconds % 60

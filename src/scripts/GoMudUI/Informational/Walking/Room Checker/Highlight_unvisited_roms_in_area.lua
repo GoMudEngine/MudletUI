@@ -5,7 +5,10 @@ function ui.highlightUnvisitedRooms(area, var)
   local area
   
   if not area or area == "" then
-    area = getRoomArea(gmcp.Room.Info.num)
+    local roomId = ui.getRoomId()
+    if roomId then
+      area = getRoomArea(roomId)
+    end
   end
   
   local roomTable = getAreaRooms(area)

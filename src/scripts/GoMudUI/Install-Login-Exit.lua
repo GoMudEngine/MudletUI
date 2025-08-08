@@ -1,159 +1,206 @@
-ui = ui or {} 
+ui = ui or {}
 
-function ui.connected()
-    ui = ui or {} 
-end
-  
-function ui.justLoggedIn()
-  tempTimer(10, [[ ui.checkForUpdate() ]])
+-- Simple state tracking
+ui.isUpdating = false
+
+-- Centralized data persistence functions
+function ui.saveUserData()
+    local dataDir = getMudletHomeDir() .. "/GoMudUI"
+    
+    -- Ensure directory exists
+    if not io.exists(dataDir) then
+        lfs.mkdir(dataDir)
+    end
+    
+    -- Save container sizes if containers exist
+    if ui.left and ui.right and ui.top and ui.bottom then
+        ui.containerSizes = {
+            left = ui.left:get_width(),
+            right = ui.right:get_width(),
+            top = ui.top:get_height(),
+            bottom = ui.bottom:get_height()
+        }
+    end
+    
+    -- Save only what matters
+    table.save(dataDir .. "/ui.settings.lua", ui.settings)
+    table.save(dataDir .. "/ui.knownRooms.lua", ui.knownRooms)
+    table.save(dataDir .. "/ui.roomNotes.lua", ui.roomNotes)
+    table.save(dataDir .. "/ui.containerSizes.lua", ui.containerSizes)
+    
+    ui.displayUIMessage("UI data saved")
 end
 
-function ui.profileLoaded()
-  
-  -------------[ Load any saved tables into the name space ]-------------
-  
-  -- Load saved settings if any
-  if io.exists(getMudletHomeDir().."/"..ui.packageName.."/ui.settings.lua") then
-    table.load(getMudletHomeDir().."/"..ui.packageName.."/ui.settings.lua", ui.settings) -- using / is OK on Windows too.
-    ui.displayUIMessage("Settings Table Loaded")
+function ui.loadUserData()
+    local dataDir = getMudletHomeDir() .. "/GoMudUI"
+    
+    -- Load settings
+    if io.exists(dataDir .. "/ui.settings.lua") then
+        table.load(dataDir .. "/ui.settings.lua", ui.settings)
+        ui.displayUIMessage("Settings loaded")
     else
-    -- If we don't find any saved settings load the standard settings
-    ui.createSettings()
-  end  
-
-  -- Load the known rooms table
-  if io.exists(getMudletHomeDir().."/"..ui.packageName.."/ui.knownRooms.lua") then
-    table.load(getMudletHomeDir().."/"..ui.packageName.."/ui.knownRooms.lua", ui.knownRooms) -- using / is OK on Windows too.
-    ui.displayUIMessage("Known rooms loaded")
-  end
+        ui.createSettings()
+    end
     
-  -- Load the rooms notes
-  if io.exists(getMudletHomeDir().."/"..ui.packageName.."/ui.roomNotes.lua") then
-    table.load(getMudletHomeDir().."/"..ui.packageName.."/ui.roomNotes.lua", ui.roomNotes) -- using / is OK on Windows too.
-    ui.displayUIMessage("Room notes loaded")
-  end
-  -- Check if we have a crowd map version downloaded
-  
-  -- Crowmap has been disabled currently.
-  
-  --if io.exists(getMudletHomeDir().."/map downloads/current") then
-  --  ui.crowdmapVersionFile = io.open(getMudletHomeDir().."/map downloads/current",r) -- using / is OK on Windows too.
-  --  ui.crowdmapVersion = ui.crowdmapVersionFile:read("*number")
-  --end
-
-  ui.displayUIMessage("Initializing UI")
-  ui.createContainers("startup")
-  
-  if ui.postInstallDone then
-    expandAlias("ui", false)
-    ui.postInstallDone = false
-  end
-
+    -- Load known rooms
+    if io.exists(dataDir .. "/ui.knownRooms.lua") then
+        table.load(dataDir .. "/ui.knownRooms.lua", ui.knownRooms)
+        ui.displayUIMessage("Known rooms loaded")
+    end
+    
+    -- Load room notes
+    if io.exists(dataDir .. "/ui.roomNotes.lua") then
+        table.load(dataDir .. "/ui.roomNotes.lua", ui.roomNotes)
+        ui.displayUIMessage("Room notes loaded")
+    end
+    
+    -- Load container sizes
+    ui.containerSizes = {}
+    if io.exists(dataDir .. "/ui.containerSizes.lua") then
+        table.load(dataDir .. "/ui.containerSizes.lua", ui.containerSizes)
+        ui.displayUIMessage("Container sizes loaded")
+    end
 end
 
-
-function ui.saveOnExit()
-  ui.displayUIMessage("Saving UI tables")
-  table.save(getMudletHomeDir().."/"..ui.packageName.."/ui.settings.lua", ui.settings)
-  table.save(getMudletHomeDir().."/"..ui.packageName.."/ui.knownRooms.lua", ui.knownRooms)
-  table.save(getMudletHomeDir().."/"..ui.packageName.."/ui.roomNotes.lua", ui.roomNotes)
+-- Connection event handler
+function ui.connected()
+    -- Request game info immediately on connection
+    sendGMCP("GMCP SendGameInfo")
 end
 
-function ui.postInstallHandling(_, package)
+-- Just logged in handler
+function ui.justLoggedIn()
+    tempTimer(10, [[ ui.checkForUpdate() ]])
+end
 
-  if package == "mudlet-mapper" then
-    mmp = mmp or {}
-    raiseEvent("mmp logged in", "gomud")
-    mmp.game = "gomud"
-    mmp.echo("We're connected to GoMud.")
-  end
-  
-  if package == "GoMudUI" then
+-- Profile loaded handler
+function ui.profileLoaded()
+    -- Load all user data
+    ui.loadUserData()
     
-    --Check if the generic_mapper package is installed and if so uninstall it
-    if table.contains(getPackages(),"generic_mapper") then
-      ui.displayUIMessage("Now removing standard mapping script")
-      if map.registeredEvents then -- Prevent the generic mapper script from showing confusing information
-        for _,id in ipairs(map.registeredEvents) do
-              killAnonymousEventHandler(id)
+    -- Only create containers if they don't exist or aren't visible
+    if not ui.left or not ui.left.visible then
+        ui.displayUIMessage("Initializing UI")
+        ui.createContainers("startup")
+    end
+    
+    -- Request fresh GMCP data
+    sendGMCP("GMCP SendFullPayload")
+end
+
+-- Package install handler
+function ui.handlePackageInstall(_, package)
+    if package == "mudlet-mapper" then
+        mmp = mmp or {}
+        raiseEvent("mmp logged in", "gomud")
+        mmp.game = "gomud"
+        mmp.echo("We're connected to " .. ui.getGameName() .. ".")
+        return
+    end
+
+    if package ~= "GoMudUI" then return end
+    
+    -- Always ensure settings exist
+    if not ui.settings or not ui.settings.consoleFont then
+        ui.loadUserData()
+    end
+    
+    -- Always create containers on install
+    ui.createContainers("startup")
+    
+    -- Handle mapper installation
+    if table.contains(getPackages(), "generic_mapper") then
+        ui.displayUIMessage("Removing standard mapping script")
+        if map and map.registeredEvents then
+            for _, id in ipairs(map.registeredEvents) do
+                killAnonymousEventHandler(id)
+            end
         end
-      end
-      tempTimer(1, function() uninstallPackage("generic_mapper") end)
+        tempTimer(1, function() uninstallPackage("generic_mapper") end)
     end
-  
-    -- Options for pre-relase versions:
+    
+    -- Install custom mapper if needed
+    if not table.contains(getPackages(), "GoMudMapper") then
+        ui.displayUIMessage("Installing custom mapper script")
+        tempTimer(1, function()
+            installPackage("https://github.com/GoMudEngine/MudletMapper/releases/latest/download/GoMudMapper.mpackage")
+        end)
+    end
+    
+    -- Check version type
     if string.find(ui.version, "pre") then
-      ui.displayUIMessage("This is a pre-release version. Version is: "..ui.version)
-      ui.profileLoaded()
-      ui.connected()
-    end
-    --ui.createContainers("startup")
-        
-    -- Check if there is a map loaded already
-    if table.is_empty(getRooms()) then
-      -- there is no map loaded, but if you want a secondary doublecheck
-      if table.size(getAreaTable()) == 1 then
-      -- only has the defaultarea, and no rooms, so there's definitely no map loaded
-      --ui.displayUIMessage("No map loaded")
-      --ui.displayUIMessage("Use 'mconfig crowdmap on' to use the crowd map")
-      -- just download a file and save it in our profile folder
-      end
+        ui.displayUIMessage("Pre-release version: " .. ui.version)
     end
     
-    -- Install IRE mapping script  
-    if not table.contains(getPackages(),"GoMudMapper") then
-      ui.displayUIMessage("Now installing custom GoMud mapper script")
-      tempTimer(1, function() installPackage("https://github.com/GoMudEngine/MudletMapper/releases/latest/download/GoMudMapper.mpackage") end)
+    -- Handle update vs fresh install
+    if ui.isUpdating then
+        ui.isUpdating = false
+        ui.displayUIMessage("Update complete!")
+    else
+        ui.displayUIMessage("UI installed!")
     end
     
-    ui.postInstallDone = true
+    -- Always request GMCP data
+    sendGMCP("GMCP SendFullPayload")
     
-    if not ui.isUpdating then
-      ui.profileLoaded()
-    end
+    -- Update top bar
     ui.updateTopBar()
-  end
-  
 end
 
 function ui.gameEngineCommand()
-  if not gmcp.Client.GUI.gomudui then
-    return
-  end
-  local command = gmcp.Client.GUI.gomudui
-  if command == "update" then
-    ui.manualUpdate = true
-    ui.checkForUpdate()
-  end
-  if command == "remove" then
-    ui.displayUIMessage("Now removing UI package from Mudlet")
-    uninstallPackage("GoMudUI")
-  end
+    if not gmcp.Client.GUI.gomudui then
+        return
+    end
+    local command = gmcp.Client.GUI.gomudui
+    if command == "update" then
+        ui.manualUpdate = true
+        ui.checkForUpdate()
+    end
+    if command == "remove" then
+        ui.displayUIMessage("Now removing UI package from Mudlet")
+        uninstallPackage("GoMudUI")
+    end
 end
 
-function ui.unInstall(_, package)
-  
-  if package == "GoMudUI" and not ui.isUpdating then
-    ui.displayUIMessage("Cleaning up - removing the UI mapper")
-    uninstallPackage("mudlet-mapper")
+-- Package uninstall handler
+function ui.handlePackageUninstall(_, package)
+    if package ~= "GoMudUI" then return end
     
-    ui.displayUIMessage("Re-installing the generic mapper")
-    if not table.contains(getPackages(),"generic_mapper") then
-      tempTimer(1, function() installPackage("https://raw.githubusercontent.com/Mudlet/Mudlet/development/src/mudlet-lua/lua/generic-mapper/generic_mapper.xml") end)
+    -- Save user data before uninstall
+    ui.saveUserData()
+    
+    -- Only do visual cleanup if not updating
+    if not ui.isUpdating then
+        ui.displayUIMessage("Cleaning up UI")
+        
+        -- Hide containers
+        if ui.left then ui.left:hide() end
+        if ui.right then ui.right:hide() end
+        if ui.top then ui.top:hide() end
+        if ui.bottom then ui.bottom:hide() end
+        
+        -- Reset borders
+        setBorderBottom(0)
+        setBorderTop(0)
+        setBorderLeft(0)
+        setBorderRight(0)
+        
+        -- Uninstall mapper
+        ui.displayUIMessage("Removing custom mapper")
+        uninstallPackage("GoMudMapper")
+        
+        -- Reinstall generic mapper
+        ui.displayUIMessage("Re-installing generic mapper")
+        if not table.contains(getPackages(), "generic_mapper") then
+            tempTimer(1, function()
+                installPackage("https://raw.githubusercontent.com/Mudlet/Mudlet/development/src/mudlet-lua/lua/generic-mapper/generic_mapper.xml")
+            end)
+        end
+        
+        -- Reset font
+        setFont("main", "Bitstream Vera Sans Mono")
+        
+        -- Reset profile after a delay
+        tempTimer(3, function() resetProfile() end)
     end
-    
-    ui.displayUIMessage("Removing windows and resetting borders")
-    ui.left:hide()
-    ui.right:hide()
-    ui.bottom:hide()
-    ui.top:hide()
-    
-    setBorderBottom(0)
-    setBorderTop(0)
-    setBorderLeft(0)
-    setBorderRight(0)
-    setFont("main", "Bitstream Vera Sans Mono")
-    
-    tempTimer(3, function() resetProfile() end)
-  end
 end

@@ -18,24 +18,30 @@ end
 function ui.updateRoomDisplay()
   -- Cache frequently accessed tables
   local room = gmcp.Room
-  if not (room and room.Info) then return end
+  if not room or not room.Info or not room.Info.Basic then 
+    ui.roomDisplay:clear("Room")
+    ui.roomDisplay:cecho("Room", "<grey>No room data available")
+    return 
+  end
   
-  -- Build info with defaults
+  -- Extract room info from the correct GMCP structure
+  local basic = room.Info.Basic
   local info = {
-    num = room.Info.num or "0",
-    environment = room.Info.environment or "Unknown",
-    area = room.Info.area or "Unknown Area",
-    details = room.Info.details or {},
-    quest = tonumber(room.Info.quest) or 0,
-    queststatus = room.Info.queststatus or "Undiscovered",
-    questname = room.Info.questname or "No Quest"
+    num = basic.id or "0",
+    environment = basic.environment or "Unknown",
+    area = basic.area or "Unknown Area",
+    details = basic.details or {},
+    quest = tonumber(basic.quest) or 0,
+    queststatus = basic.queststatus or "Undiscovered",
+    questname = basic.questname or "No Quest"
   }
   
-  -- Build content with defaults
+  -- Build content with defaults from Room.Info.Contents
+  local contents = room.Info.Contents or {}
   local content = {
-    Adventures = room.Content and room.Content.Adventures or {},
-    NPC = room.Content and room.Content.NPC or {},
-    Items = room.Content and room.Content.Items or {}
+    Adventures = contents.Players or {},
+    NPC = contents.Npcs or {},
+    Items = contents.Items or {}
   }
 
   -- Cache and compute values once
@@ -64,7 +70,7 @@ function ui.updateRoomDisplay()
     ui.roomDisplay:cecho("Room", "<dodger_blue>QName<white>    : <reset>")
     ui.roomDisplay:cechoLink("Room",
       "<reset>" .. [["<u>]] .. info.questname .. [[</u>"]],
-      [[send("journal read ]] .. info.quest .. [[")]],
+      [[send("journal read ]] .. info.quest .. [[", false)]],
       "Read journal entry",
       true
     )

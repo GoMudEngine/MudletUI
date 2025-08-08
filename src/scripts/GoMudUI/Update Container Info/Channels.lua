@@ -37,9 +37,14 @@ function ui.updateChannelDisplay(eventName, ...)
    -- Send chats to the right tab and with the right name and coloring
     
     local channel = gmcp.Comm.Channel.channel
-    local cc = ui.channelColor[gmcp.Comm.Channel.channel].channelColor or "<reset>"
+    local channelInfo = ui.channelColor[channel]
+    if not channelInfo then
+        -- Unknown channel, skip
+        return
+    end
+    local cc = channelInfo.channelColor or "<reset>"
     local sender = gmcp.Comm.Channel.sender or "unknown"
-    local tabName = {ui.channelColor[gmcp.Comm.Channel.channel].channelName,"All"}
+    local tabName = {channelInfo.channelName,"All"}
     
     --local time = "\n"..getTime(true, "hh:mm ")
     

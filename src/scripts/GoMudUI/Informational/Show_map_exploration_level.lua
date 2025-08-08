@@ -25,11 +25,12 @@ function ui.showMapExpLevel()
     
   end
 
-  if getRoomArea(gmcp.Room.Info.num) then 
+  local roomId = ui.getRoomId()
+  if roomId and getRoomArea(roomId) then 
     cecho("\n\n<lime_green>Click here to ")
-    cechoLink("<firebrick>highlight ", [[ui.highlightUnvisitedRooms(]]..getRoomArea(gmcp.Room.Info.num)..[[)]], "", true)
+    cechoLink("<firebrick>highlight ", [[ui.highlightUnvisitedRooms(]]..getRoomArea(roomId)..[[)]], "", true)
     cecho("<lime_green>or ")
-    cechoLink("<light_blue>unhighlight ", [[ui.highlightUnvisitedRooms(]]..getRoomArea(gmcp.Room.Info.num)..[[,"unhighlight")]], "", true)
+    cechoLink("<light_blue>unhighlight ", [[ui.highlightUnvisitedRooms(]]..getRoomArea(roomId)..[[,"unhighlight")]], "", true)
     cecho("<lime_green>unvisited rooms in <cyan>current area")
     cecho("\n<lime_green>or click an <cyan>area name<lime_green> to show unvisited rooms.\n\n")
   else

@@ -22,5 +22,17 @@
               "isActive": "yes",
               "script": "",
               "isFolder": "no"
+       },
+       {
+              "name": "UI Color Command",
+              "isActive": "yes",
+              "script": "",
+              "isFolder": "no"
+       },
+       {
+              "name": "GMCP Helpers",
+              "isActive": "yes",
+              "script": "",
+              "isFolder": "no"
        }
 ]

@@ -6,7 +6,7 @@ ui.knownRooms = ui.knownRooms or {}
 
 ui.settings = ui.settings or {}
 
-ui.version = "1.0.5"
+ui.version = "__VERSION__"
 ui.packageName = "GoMudUI"
 
 ui.OSType, ui.OSVersion = getOS()
@@ -25,10 +25,11 @@ DemonTools = require("GoMudUI.demontools")
 
 -------------[ Define the event handlers we need for the UI ]-------------
 ui.events.gmcpevents = {
-    sysInstallPackage = { "ui.postInstallHandling" },
-    sysUninstall = { "ui.unInstall" },
+    sysInstallPackage = { "ui.handlePackageInstall" },
+    sysUninstallPackage = { "ui.handlePackageUninstall" },
     sysConnectionEvent = { "ui.connected" },
     sysLoadEvent = { "ui.profileLoaded" },
+    sysExitEvent = { "ui.saveUserData" },
     UICreated = { "ui.updateDisplays" },
     sysDownloadDone = { "ui.fileDownloadedSuccess" },
     sysDownloadError = { "ui.fileDownloadedError" },
@@ -37,21 +38,36 @@ ui.events.gmcpevents = {
     sysMapDownloadEvent = { "ui.mapDownloaded" },
     ["EMCO tab change"] = { "ui.showSettings" },
     ["gmcp.Char.Vitals"] = { "ui.updatePlayerGauges", "ui.updatePromptDisplay" },
-    ["gmcp.Char.CombatStatus"] = { "ui.updateCombatStatusGauge" },
+    ["gmcp.Char.Combat.Cooldown"] = { "ui.updateCombatStatusGauge" },
+    ["gmcp.Char.Combat.Status"] = { "ui.updateCombatDisplay" },
+    ["gmcp.Char.Combat.Target"] = { "ui.updateEnemyGauge", "ui.updateCombatDisplay" },
+    ["gmcp.Char.Combat.Enemies"] = { "ui.updateCombatDisplay" },
     ["gmcp.Char.Affects"] = { "ui.updateAffectsDisplay" },
     ["gmcp.Char.Worth"] = { "ui.updatePromptDisplay", "ui.updateCharDisplay" },
-    --["gmcp.Char"] = {"ui.updateDisplays","ui.updateCharDisplay", "ui.updateAffectsDisplay", "ui.updatePromptDisplay","ui.updateTopBar"},
-    ["gmcp.Char.Inventory"] = { "ui.updateEQDisplay", "ui.updatePromptDisplay", "ui.updateInvDisplay" },
-    ["gmcp.Room"] = { "ui.updateRoomDisplay" },
+    ["gmcp.Char.Inventory.Worn"] = { "ui.updateEQDisplay" },
+    ["gmcp.Char.Inventory.Backpack.Items"] = { "ui.updateInvDisplay" },
+    ["gmcp.Char.Inventory.Backpack.Summary"] = { "ui.updatePromptDisplay" },
+    ["gmcp.Room.Info.Basic"] = { "ui.updateRoomDisplay", "ui.checkRooms" },
+    ["gmcp.Room.Info.Contents.Players"] = { "ui.updateRoomDisplay" },
+    ["gmcp.Room.Info.Contents.Npcs"] = { "ui.updateRoomDisplay" },
+    ["gmcp.Room.Info.Contents.Items"] = { "ui.updateRoomDisplay" },
+    ["gmcp.Room.Add.Player"] = { "ui.updateRoomDisplay" },
+    ["gmcp.Room.Add.Npc"] = { "ui.updateRoomDisplay" },
+    ["gmcp.Room.Add.Item"] = { "ui.updateRoomDisplay" },
+    ["gmcp.Room.Remove.Player"] = { "ui.updateRoomDisplay" },
+    ["gmcp.Room.Remove.Npc"] = { "ui.updateRoomDisplay" },
+    ["gmcp.Room.Remove.Item"] = { "ui.updateRoomDisplay" },
     ["gmcp.Char.Stats"] = { "ui.updateCharDisplay" },
+    ["gmcp.Char.Info"] = { "ui.updateCharDisplay" },
+    ["gmcp.Char.Status"] = { "ui.updateCharDisplay" },
+    ["gmcp.Char.Pets"] = { "ui.updatePetDisplay" },
     ["gmcp.Comm.Channel"] = { "ui.updateChannelDisplay" },
-    ["gmcp.Char.Enemies"] = { "ui.updateCombatDisplay", "ui.updateEnemyGauge" },
-    ["gmcp.Room.Info"] = { "ui.checkRooms" },
     ["mmapper updated map"] = { "ui.updateTopBar" },
-    ["gmcp.Game.Who"] = { "ui.updateWhoDisplay" },
+    ["gmcp.Game.Who.Players"] = { "ui.updateWhoDisplay" },
     ["gmcp.Game.Info"] = { "ui.justLoggedIn" },
-    ["gmcp.Client.GUI"] = { "ui.gameEngineCommand" }
-
+    ["gmcp.Client.GUI"] = { "ui.gameEngineCommand" },
+    ["gmcp.Party.Info"] = { "ui.updateGroupDisplay" },
+    ["gmcp.Party.Vitals"] = { "ui.updateGroupDisplay" }
 }
 -- Run this to define the event handlers above
 ui.defineEventHandlers()
@@ -167,14 +183,14 @@ function ui.createSettings()
         -- Define the displays we need
 
         displays = {
-            charDisplay = { dest = "container1", emco = true, tabs = { "Character", "Wholist" } },
-            eqDisplay = { dest = "container2", emco = true, tabs = { "Equipment", "Inventory", "Pets" } },
+            charDisplay = { dest = "container1", emco = true, tabs = { "Character", "Wholist", "Pets" } },
+            eqDisplay = { dest = "container2", emco = true, tabs = { "Equipment", "Inventory", "Group" } },
             roomDisplay = { dest = "container3", emco = true, wrap = true, tabs = { "Room", "Combat" } },
             channelDisplay = { dest = "container4", emco = true, allTab = true, wrap = true, tabs = { "All", "Chat", "Say", "Whisper", "Shout", "Group" } },
             gaugeDisplay = { dest = "container5" },
             promptDisplay = { dest = "container6" },
             mapperDisplay = { dest = "container7", emco = true, mapTab = "Mapper", tabs = { "Mapper", "Settings" }, mapper = true },
-            affectsDisplay = { dest = "container8", emco = true, wrap = true, tabs = { "Affects", "Group" } },
+            affectsDisplay = { dest = "container8", emco = true, wrap = true, tabs = { "Affects" } },
             promptRightDisplay = { dest = "container9", wrap = true },
             topDisplay = { dest = "container10" },
         },

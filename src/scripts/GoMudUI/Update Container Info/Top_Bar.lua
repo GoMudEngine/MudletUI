@@ -1,8 +1,13 @@
 function ui.updateTopBar()
+  -- Check if UI is initialized before trying to update
+  if not ui or not ui.topDisplay then
+    return
+  end
+  
   -- Write UI version number in the top bar:
   ui.topDisplay:clear()
-  ui.topDisplay:cecho("<DarkSeaGreen>GoMud UI version<white>: ")
-  ui.topDisplay:cechoLink("<SkyBlue><u>"..ui.version.."</u>", [[ui.gomudUIShowFullChangelog()]], "Show the GoMud UI changelog", true)
+  ui.topDisplay:cecho("<DarkSeaGreen>" .. ui.getGameName() .. " UI version<white>: ")
+  ui.topDisplay:cechoLink("<SkyBlue><u>"..ui.version.."</u>", [[ui.gomudUIShowFullChangelog()]], "Show the " .. ui.getGameName() .. " UI changelog", true)
   if mmp and mmp.version then
     ui.topDisplay:echo("  ")
     ui.topDisplay:cecho("<DarkSeaGreen>Mapper Version<white>: <SkyBlue>"..mmp.version)
@@ -16,7 +21,9 @@ function ui.updateTopBar()
   
   if gmcp.Game and gmcp.Game.Info then
     -- Get the time difference
-    local timeElapsed = ui.getTimeElapsed(gmcp.Game.Info.logintime)
+    -- Prefer login_time_epoch if available, otherwise use login_time
+    local loginTimestamp = ui.getLoginTime()
+    local timeElapsed = ui.getTimeElapsed(loginTimestamp)
 
     -- Display the result
     ui.topDisplay:echo("  ")

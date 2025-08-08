@@ -1,50 +1,65 @@
 ui.knownRooms = ui.knownRooms or {}
 
 function ui.checkRooms()
-if not gmcp.Room.Info then return end
-if not getRoomArea(gmcp.Room.Info.num) then return end
+  local roomId = ui.getRoomId()
+  if not roomId then return end
+  if not getRoomArea(roomId) then return end
 
-local questNum
-local shopName
-local shopExists
-local area = getRoomAreaName(getRoomArea(gmcp.Room.Info.num))
-
+  local questNum
+  local shopName
+  local shopExists
+  local area = getRoomAreaName(getRoomArea(roomId))
   
-  if gmcp.Room.Info.quest ~= 0 then
-    questNum = gmcp.Room.Info.quest
-    else
+  -- Check for quest info
+  if gmcp.Room and gmcp.Room.Info and gmcp.Room.Info.Basic and gmcp.Room.Info.Basic.quest and gmcp.Room.Info.Basic.quest ~= 0 then
+    questNum = gmcp.Room.Info.Basic.quest
+  else
     questNum = false
   end
 
-  if gmcp.Room.Info.shop ~= "" then
-    shopName = gmcp.Room.Info.shop
+  -- Check for shop info
+  if gmcp.Room and gmcp.Room.Info and gmcp.Room.Info.Basic and gmcp.Room.Info.Basic.shop and gmcp.Room.Info.Basic.shop ~= "" then
+    shopName = gmcp.Room.Info.Basic.shop
     shopExists = true
-    else
+  else
     shopName = ""
     shopExists = false
   end
   
-  ui.unHighLightRooms(gmcp.Room.Info.num)
+  ui.unHighLightRooms(roomId)
   
-  ui.knownRooms[gmcp.Room.Info.num] = ui.knownRooms[gmcp.Room.Info.num] or {}
+  ui.knownRooms[roomId] = ui.knownRooms[roomId] or {}
   
-  ui.knownRooms[gmcp.Room.Info.num].area = area
-  ui.knownRooms[gmcp.Room.Info.num].quest = questNum
-  ui.knownRooms[gmcp.Room.Info.num].shop = shopExists
-  ui.knownRooms[gmcp.Room.Info.num].shopName = shopName
+  ui.knownRooms[roomId].area = area
+  ui.knownRooms[roomId].quest = questNum
+  ui.knownRooms[roomId].shop = shopExists
+  ui.knownRooms[roomId].shopName = shopName
     
-  if table.size(gmcp.Room.Contents) > 0 then
-    ui.knownRooms[gmcp.Room.Info.num].contents = ui.knownRooms[gmcp.Room.Info.num].contents or {}
-    for index,content in pairs(gmcp.Room.Contents) do
-      if not table.contains(ui.knownRooms[gmcp.Room.Info.num], gmcp.Room.Contents[index].name) then
-      table.insert(ui.knownRooms[gmcp.Room.Info.num].contents, gmcp.Room.Contents[index].name)
+  -- Check for room contents
+  if gmcp.Room and gmcp.Room.Info and gmcp.Room.Info.Contents then
+    ui.knownRooms[roomId].contents = ui.knownRooms[roomId].contents or {}
+    
+    -- Process NPCs
+    if gmcp.Room.Info.Contents.Npcs then
+      for _, npc in ipairs(gmcp.Room.Info.Contents.Npcs) do
+        if npc.name and not table.contains(ui.knownRooms[roomId].contents, npc.name) then
+          table.insert(ui.knownRooms[roomId].contents, npc.name)
+        end
+      end
+    end
+    
+    -- Process Items
+    if gmcp.Room.Info.Contents.Items then
+      for _, item in ipairs(gmcp.Room.Info.Contents.Items) do
+        if item.name and not table.contains(ui.knownRooms[roomId].contents, item.name) then
+          table.insert(ui.knownRooms[roomId].contents, item.name)
+        end
       end
     end
   end
---
 end
 
---registerNamedEventHandler("ui","checkVisitedRooms","gmcp.Room.Info",
+--registerNamedEventHandler("ui","checkVisitedRooms","gmcp.Room",
 --  function()
 --    ui.checkRooms("walking")
 --  end

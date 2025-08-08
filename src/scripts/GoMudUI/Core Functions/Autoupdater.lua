@@ -4,13 +4,16 @@ ui.packageName = "GoMudUI"
 ui.downloadFolder = getMudletHomeDir().."/"..ui.packageName.."/ui_updater/"
 -- Install the new UI
 function ui.installGoMudUI()
-  
-    ui.displayUIMessage("Now installing version <sky_blue>"..ui.versionNew.."<reset> of GoMud UI")
-  
+    ui.displayUIMessage("Now installing version <sky_blue>"..ui.versionNew.."<reset> of " .. ui.getGameName() .. " UI")
+    
+    -- Set update flag to prevent visual cleanup during uninstall
     ui.isUpdating = true
+    ui.displayUIMessage("Starting update...")
+    
+    -- Uninstall will trigger but won't clean up visually
     uninstallPackage("GoMudUI")
-    ui.postInstallDone = false
-    ui.firstRun = true
+    
+    -- Install new version
     installPackage("https://github.com/GoMudEngine/MudletUI/releases/latest/download/GoMudUI.mpackage")
 end
 
@@ -91,10 +94,10 @@ function ui.fileDownloadedSuccess(_, filename)
     -- Stealing from IRE over :)
     
     ui.gomudUIChangelog = env.changelog
-    ui.displayUIMessage("<grey>Lastes GoMud UI update:<DarkSeaGreen>")
+    ui.displayUIMessage("<grey>Latest " .. ui.getGameName() .. " UI update:<DarkSeaGreen>")
     cechoLink(" <dodger_blue><u>Show the full changelog</u>", [[ui.gomudUIShowFullChangelog()]], "Click to see the full changelog", true)
     cecho("<DarkSeaGreen> \n\n"..ui.gomudUIChangelog[#ui.gomudUIChangelog])
-    cechoLink("\n\n<green>### <gold>GoMud UI <white>: <dodger_blue><u>Click here to update to the latest version!</u>\n", [[ui.installGoMudUI()]], "Install new version of GoMud UI", true)
+    cechoLink("\n\n<green>### <gold>" .. ui.getGameName() .. " UI <white>: <dodger_blue><u>Click here to update to the latest version!</u>\n", [[ui.installGoMudUI()]], "Install new version of " .. ui.getGameName() .. " UI", true)
     ui.displayUIMessage("Or use the command <green>ui update ui<grey> to update.")
   end
 

@@ -1,6 +1,5 @@
 function ui.updateWhoDisplay()
---display(gmcp.Game)
-if gmcp.Game == nil or gmcp.Game.Who == nil or gmcp.Game.Who.Players == nil then return end
+  if gmcp.Game == nil or gmcp.Game.Who == nil or gmcp.Game.Who.Players == nil then return end
 
   ui.charDisplay:clear("Wholist")
   ui.charDisplay:cecho("Wholist", fText.fText("<white>[ <gold>Online players<gold>: <white>"..#gmcp.Game.Who.Players.."<white> ]<reset>", {alignment = "center", formatType = "c", width = math.floor(ui.charDisplay:get_width()/ui.consoleFontWidth), cap = "", spacer = "-", inside = true, mirror = true}))

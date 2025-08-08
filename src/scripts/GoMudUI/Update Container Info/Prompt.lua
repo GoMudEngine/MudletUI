@@ -1,8 +1,4 @@
 function ui.updatePromptDisplay()
-  if gmcp.Char == nil or gmcp.Char.Vitals == nil or gmcp.Char.Worth == nil or gmcp.Char.Inventory == nil then
-    return
-  end
-  
   -- Cache values with sensible defaults.
   local xp, xptnl = 100, 1000
   local energy, energyMax = 100, 100
@@ -11,18 +7,24 @@ function ui.updatePromptDisplay()
   local carry, capacity = 0, 0
   --local spell, charge = "", ""
 
-  if gmcp.Char.Worth then
-    xp    = tonumber(gmcp.Char.Worth.xp) or 0
-    xptnl = tonumber(gmcp.Char.Worth.tnl) or 0
-    xpPct = (xptnl > 0) and (xp / xptnl) * 100 or 0
-    xpPctPretty = math.floor(xpPct + 0.5)
-    gold  = tonumber(gmcp.Char.Worth.gold_carry) or 0
+  if gmcp and gmcp.Char and gmcp.Char.Worth then
+    local xpInfo = ui.getExperienceInfo()
+    xp = xpInfo.current
+    xptnl = xpInfo.toNext
+    xpPctPretty = xpInfo.percent
+    gold  = tonumber(gmcp.Char.Worth.gold_carried) or 0
     bank  = tonumber(gmcp.Char.Worth.gold_bank) or 0
   end
   
-  if gmcp.Char.Inventory and gmcp.Char.Inventory.Backpack then
-    carry    = tonumber(gmcp.Char.Inventory.Backpack.count) or 0
-    capacity = tonumber(gmcp.Char.Inventory.Backpack.max) or 0
+  if gmcp and gmcp.Char and gmcp.Char.Vitals then
+    energy = tonumber(gmcp.Char.Vitals.energy) or energy
+    energyMax = tonumber(gmcp.Char.Vitals.energy_max) or energyMax
+  end
+  
+  if gmcp and gmcp.Char and gmcp.Char.Inventory and gmcp.Char.Inventory.Backpack and gmcp.Char.Inventory.Backpack.Summary then
+    local backpack = ui.getBackpackCapacity()
+    carry = backpack.count
+    capacity = backpack.max
   end
 
   local promptWidth = ui.mainWindowWidth / ui.consoleFontWidth
